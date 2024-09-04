@@ -1,6 +1,6 @@
-const { Octokit } = require('@octokit/core')
+import { Octokit } from '@octokit/core'
 
-exports.handler = async function (event, context) {
+export const handler = async function (event, context) {
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN // Use environment variables for the token
   const octokit = new Octokit({ auth: GITHUB_TOKEN })
 
