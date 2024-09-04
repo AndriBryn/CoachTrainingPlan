@@ -63,7 +63,7 @@ export const handler = async function (event, context) {
     )
 
     // Update the branch to point to the new commit
-    await octokit.request('PATCH /repos/{owner}/{repo}/git/refs/heads/{branch}', {
+    await octokit.request('PATCH /repos/{owner}/{repo}/git/refs/{ref}', {
       owner,
       repo,
       ref: `refs/heads/${branch}`,
