@@ -7,7 +7,7 @@ export const handler = async function (event, context) {
   const owner = 'AndriBryn' // Replace with your GitHub username or organization
   const repo = 'website' // Replace with your repository name
   const path = 'public/data/clubs.csv' // Path to the file in the repo
-  const branch = 'main' // Branch to commit to (Ensure this is correct)
+  const branch = 'main' // Branch to commit to
 
   try {
     const { csvContent } = JSON.parse(event.body)
@@ -62,11 +62,10 @@ export const handler = async function (event, context) {
       }
     )
 
-    // Update the branch to point to the new commit
-    await octokit.request('PATCH /repos/{owner}/{repo}/git/refs/heads/{branch}', {
+    // Directly specify the branch in the URL
+    await octokit.request('PATCH /repos/{owner}/{repo}/git/refs/heads/main', {
       owner,
       repo,
-      ref: `heads/${branch}`, // Ensure branch name is added after 'heads/'
       sha: commitResponse.sha,
       force: true // Force the update if necessary
     })
