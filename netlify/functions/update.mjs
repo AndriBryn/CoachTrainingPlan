@@ -66,7 +66,7 @@ export const handler = async function (event, context) {
     await octokit.request('PATCH /repos/{owner}/{repo}/git/refs/heads/{branch}', {
       owner,
       repo,
-      ref: `heads/${branch}`,
+      ref: `refs/heads/${branch}`,
       sha: commitResponse.sha
     })
 
