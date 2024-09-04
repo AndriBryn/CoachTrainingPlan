@@ -19,9 +19,16 @@ export const handler = async function (event, context) {
 
     const csvContent = Buffer.from(fileData.content, 'base64').toString('utf8')
 
+    // Parse the CSV into an array of objects
+    const rows = csvContent.split('\n').slice(1) // Remove the header row
+    const measurements = rows.map((row) => {
+      const [exercise, name] = row.split(';') // Adjust if delimiter is different
+      return { exercise, name }
+    })
+
     return {
       statusCode: 200,
-      body: JSON.stringify({ csvContent })
+      body: JSON.stringify({ measurements })
     }
   } catch (error) {
     console.error(error)

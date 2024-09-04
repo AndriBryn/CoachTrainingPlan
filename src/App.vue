@@ -2,26 +2,32 @@
   <div class="upload-area" @dragover.prevent @drop.prevent="handleDrop">
     <p>Drag & Drop your CSV file here</p>
   </div>
+  <div>
+    <h1>Club Data</h1>
 
-  <!-- Section to show the measurements list and let users select and set benchmarks -->
-  <div v-if="measurements.length > 0">
-    <h1>Select Measurements and Set Benchmarks</h1>
-    <div v-for="(measurement, index) in measurements" :key="index">
-      <label>
-        <input type="checkbox" v-model="selectedMeasurements" :value="measurement.name" />
-        {{ measurement.exercise }}
-      </label>
-      <input
-        type="number"
-        v-if="selectedMeasurements.includes(measurement.name)"
-        v-model.number="benchmarks[measurement.name]"
-        min="0"
-        placeholder="Enter Benchmark"
-      />
+    <div v-if="clubsData.length">
+      <div v-for="(club, index) in clubsData" :key="index" class="club">
+        <h2>{{ club.clubName }}</h2>
+        <h3>Measurements</h3>
+        <ul>
+          <li v-for="(measurement, i) in club.measurements" :key="i">
+            {{ measurement }}
+            <input
+              type="number"
+              v-model.number="club.benchmarks[i]"
+              min="0"
+              placeholder="Enter Benchmark"
+            />
+          </li>
+        </ul>
+        <h3>Exercises</h3>
+        <ul>
+          <li v-for="(exercise, i) in club.exercises" :key="i">{{ exercise }}</li>
+        </ul>
+      </div>
+      <!-- Update Button -->
+      <button @click="updateCSV">Update CSV</button>
     </div>
-
-    <!-- Button to submit the selected measurements and benchmarks -->
-    <button @click="updateCSV">Update CSV</button>
   </div>
 </template>
 
@@ -44,21 +50,11 @@ export default {
         const response = await fetch('/.netlify/functions/get-measurements')
         const result = await response.json()
 
-        // Parse the CSV content
-        this.parseCSV(result.csvContent)
+        // No need to parse CSV; use the measurements directly
+        this.measurements = result.measurements
       } catch (error) {
         console.error('Failed to fetch measurements:', error)
       }
-    },
-    parseCSV(csvContent) {
-      // Split the CSV content into rows
-      const rows = csvContent.split('\n').slice(1) // Remove the header row
-
-      // Map the rows to measurement objects
-      this.measurements = rows.map((row) => {
-        const [exercise, name] = row.split(';') // Assuming the delimiter is semicolon
-        return { exercise, name }
-      })
     },
     updateCSV() {
       if (this.selectedMeasurements.length === 0) {
@@ -98,6 +94,41 @@ export default {
       })
 
       return [header, ...rows].join('\n')
+    },
+    handleDrop(event) {
+      const file = event.dataTransfer.files[0]
+
+      if (file && file.type === 'text/csv') {
+        const reader = new FileReader()
+
+        reader.onload = async (e) => {
+          const csvContent = e.target.result
+
+          try {
+            const response = await fetch('/.netlify/functions/update', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ csvContent })
+            })
+
+            const result = await response.json()
+            if (response.ok) {
+              alert('File updated successfully!')
+            } else {
+              alert(`Error: ${result.error}`)
+            }
+          } catch (error) {
+            console.error('Error updating file:', error)
+            alert('Failed to update the file.')
+          }
+        }
+
+        reader.readAsText(file)
+      } else {
+        alert('Please upload a valid CSV file.')
+      }
     }
   }
 }
@@ -116,5 +147,19 @@ export default {
 }
 .upload-area p {
   color: #666;
+}
+.club {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+input[type='number'] {
+  margin-left: 10px;
+}
+button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
 }
 </style>
