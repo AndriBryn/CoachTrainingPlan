@@ -6,7 +6,7 @@
   <div>
     <h1>Club Data</h1>
 
-    <div v-if="measurements.length && clubsData">
+    <div v-if="measurements.length && clubsData.length">
       <div v-for="(club, index) in clubsData" :key="index" class="club">
         <h2>{{ club.clubName }}</h2>
 
@@ -15,13 +15,18 @@
         <ul>
           <li v-for="(measurement, i) in measurements" :key="i">
             <label>
-              <input type="checkbox" v-model="club.measurements" :value="measurement.name" />
+              <input
+                type="checkbox"
+                v-model="club.measurements"
+                :value="measurement.name"
+                @change="ensureBenchmark(club, measurement.name)"
+              />
               {{ measurement.exercise }}
             </label>
             <input
               type="number"
               v-if="club.measurements.includes(measurement.name)"
-              v-model.number="club.benchmarks[i]"
+              v-model.number="club.benchmarks[club.measurements.indexOf(measurement.name)]"
               placeholder="Enter Benchmark"
             />
           </li>
@@ -80,6 +85,18 @@ export default {
         this.measurements = result.measurements // Use measurements from backend
       } catch (error) {
         console.error('Failed to fetch measurements:', error)
+      }
+    },
+
+    // Ensure a benchmark is set for each added measurement
+    ensureBenchmark(club, measurementName) {
+      const measurementIndex = club.measurements.indexOf(measurementName)
+
+      // If the benchmark doesn't exist for this measurement, set it to 0
+      if (measurementIndex === -1) {
+        club.benchmarks.push(0)
+      } else if (!club.benchmarks[measurementIndex]) {
+        club.benchmarks[measurementIndex] = 0
       }
     },
 
