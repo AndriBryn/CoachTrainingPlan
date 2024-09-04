@@ -11,7 +11,13 @@
         <h3>Measurements</h3>
         <ul>
           <li v-for="(measurement, i) in club.measurements" :key="i">
-            {{ measurement }} (Benchmark: {{ club.benchmarks[i] }})
+            {{ measurement }}
+            <input
+              type="number"
+              v-model.number="club.benchmarks[i]"
+              min="0"
+              placeholder="Enter Benchmark"
+            />
           </li>
         </ul>
         <h3>Exercises</h3>
@@ -19,6 +25,8 @@
           <li v-for="(exercise, i) in club.exercises" :key="i">{{ exercise }}</li>
         </ul>
       </div>
+      <!-- Update Button -->
+      <button @click="updateCSV">Update CSV</button>
     </div>
   </div>
 </template>
@@ -48,17 +56,54 @@ export default {
       }
     },
     parseCSV(csv) {
-      const rows = csv.split('\n').slice(1) // Split by lines and remove header
-      this.clubsData = rows.map((row) => {
+      const rows = csv.split('\n').filter((row) => row.trim()) // Split by lines and remove empty lines
+      this.clubsData = rows.slice(1).map((row) => {
         const [clubName, measurements, benchmarks, exercises] = row.split(';')
 
         return {
           clubName,
           measurements: measurements.split(','),
-          benchmarks: benchmarks.split(','),
+          benchmarks: benchmarks.split(',').map((benchmark) => parseFloat(benchmark)),
           exercises: exercises.split(',')
         }
       })
+    },
+    async updateCSV() {
+      // Convert the updated data back to CSV format
+      const updatedCSV = this.generateCSV()
+
+      try {
+        const response = await fetch('/.netlify/functions/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ csvContent: updatedCSV })
+        })
+
+        const result = await response.json()
+        if (response.ok) {
+          alert('CSV updated successfully!')
+        } else {
+          alert(`Error: ${result.error}`)
+        }
+      } catch (error) {
+        console.error('Error updating file:', error)
+        alert('Failed to update the CSV file.')
+      }
+    },
+    generateCSV() {
+      // Rebuild the CSV string from the current state of clubsData
+      const header = 'clubs;measurements;benchmark;exercises'
+      const rows = this.clubsData.map((club) => {
+        const clubName = club.clubName
+        const measurements = club.measurements.join(',')
+        const benchmarks = club.benchmarks.join(',')
+        const exercises = club.exercises.join(',')
+        return `${clubName};${measurements};${benchmarks};${exercises}`
+      })
+
+      return [header, ...rows].join('\n')
     },
     handleDrop(event) {
       const file = event.dataTransfer.files[0]
@@ -112,5 +157,19 @@ export default {
 }
 .upload-area p {
   color: #666;
+}
+.club {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+input[type='number'] {
+  margin-left: 10px;
+}
+button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
 }
 </style>
