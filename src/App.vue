@@ -2,30 +2,37 @@
   <div class="upload-area" @dragover.prevent @drop.prevent="handleDrop">
     <p>Drag & Drop your CSV file here</p>
   </div>
+
   <div>
     <h1>Club Data</h1>
 
-    <div v-if="clubsData.length">
+    <div v-if="measurements.length && clubsData">
       <div v-for="(club, index) in clubsData" :key="index" class="club">
         <h2>{{ club.clubName }}</h2>
+
+        <!-- Display all measurements with editable benchmarks -->
         <h3>Measurements</h3>
         <ul>
-          <li v-for="(measurement, i) in club.measurements" :key="i">
-            {{ measurement }}
+          <li v-for="(measurement, i) in measurements" :key="i">
+            <label>
+              <input type="checkbox" v-model="club.measurements" :value="measurement.name" />
+              {{ measurement.exercise }}
+            </label>
             <input
               type="number"
+              v-if="club.measurements.includes(measurement.name)"
               v-model.number="club.benchmarks[i]"
-              min="0"
               placeholder="Enter Benchmark"
             />
           </li>
         </ul>
+
         <h3>Exercises</h3>
         <ul>
           <li v-for="(exercise, i) in club.exercises" :key="i">{{ exercise }}</li>
         </ul>
       </div>
-      <!-- Update Button -->
+      <!-- Button to submit the updated benchmarks -->
       <button @click="updateCSV">Update CSV</button>
     </div>
   </div>
@@ -35,66 +42,82 @@
 export default {
   data() {
     return {
-      measurements: [], // List of measurements from the second CSV file
-      selectedMeasurements: [], // List of selected measurement names
-      benchmarks: {} // Object to store the benchmark for each selected measurement
+      measurements: [], // List of all measurements from get-measurements
+      clubsData: [] // List of clubs and their data from get-csv-file
     }
   },
   mounted() {
-    this.fetchMeasurements()
+    this.fetchClubData() // Fetch the initial club data
+    this.fetchMeasurements() // Fetch the measurements
   },
   methods: {
+    async fetchClubData() {
+      try {
+        const response = await fetch('/.netlify/functions/get-csv-file')
+        const result = await response.json()
+        const csvContent = result.csvContent
+
+        // Parse the club data
+        const rows = csvContent.split('\n').slice(1) // Skip header row
+        this.clubsData = rows.map((row) => {
+          const [clubName, measurements, benchmarks, exercises] = row.split(';')
+          return {
+            clubName,
+            measurements: measurements ? measurements.split(',') : [],
+            benchmarks: benchmarks ? benchmarks.split(',').map(Number) : [],
+            exercises: exercises ? exercises.split(',') : []
+          }
+        })
+      } catch (error) {
+        console.error('Failed to fetch club data:', error)
+      }
+    },
+
     async fetchMeasurements() {
       try {
-        // Fetch the measurements from the Netlify function
         const response = await fetch('/.netlify/functions/get-measurements')
         const result = await response.json()
-
-        // No need to parse CSV; use the measurements directly
-        this.measurements = result.measurements
+        this.measurements = result.measurements // Use measurements from backend
       } catch (error) {
         console.error('Failed to fetch measurements:', error)
       }
     },
-    updateCSV() {
-      if (this.selectedMeasurements.length === 0) {
-        alert('Please select at least one measurement.')
-        return
-      }
 
-      // Build the CSV data to update
-      const updatedCSV = this.generateCSV()
-
-      // Send the updated CSV to the update.mjs Netlify function
-      fetch('/.netlify/functions/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ csvContent: updatedCSV })
-      })
-        .then((response) => response.json())
-        .then((result) => {
-          if (result.message) {
-            alert('CSV updated successfully!')
-          } else {
-            alert(`Error: ${result.error}`)
-          }
-        })
-        .catch((error) => {
-          console.error('Failed to update CSV:', error)
-        })
-    },
     generateCSV() {
-      // Convert the selected measurements and their benchmarks into CSV format
-      const header = 'measurements;benchmark'
-      const rows = this.selectedMeasurements.map((name) => {
-        const benchmark = this.benchmarks[name] || 0 // Default to 0 if not set
-        return `${name};${benchmark}`
+      const header = 'clubs;measurements;benchmark;exercises'
+      const rows = this.clubsData.map((club) => {
+        const measurements = club.measurements.join(',')
+        const benchmarks = club.benchmarks.join(',')
+        const exercises = club.exercises.join(',')
+        return `${club.clubName};${measurements};${benchmarks};${exercises}`
       })
-
-      return [header, ...rows].join('\n')
+      return [header, ...rows].join('\n') // Combine header and rows into CSV format
     },
+
+    async updateCSV() {
+      try {
+        const updatedCSV = this.generateCSV()
+
+        // Send the updated CSV to Netlify function to update the file
+        const response = await fetch('/.netlify/functions/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ csvContent: updatedCSV })
+        })
+
+        const result = await response.json()
+        if (response.ok) {
+          alert('CSV updated successfully!')
+        } else {
+          alert(`Error: ${result.error}`)
+        }
+      } catch (error) {
+        console.error('Failed to update CSV:', error)
+      }
+    },
+
     handleDrop(event) {
       const file = event.dataTransfer.files[0]
 
@@ -116,6 +139,7 @@ export default {
             const result = await response.json()
             if (response.ok) {
               alert('File updated successfully!')
+              this.fetchClubData() // Re-fetch updated club data
             } else {
               alert(`Error: ${result.error}`)
             }
