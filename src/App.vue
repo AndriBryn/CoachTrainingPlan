@@ -43,10 +43,22 @@ export default {
         // Fetch the measurements from the Netlify function
         const response = await fetch('/.netlify/functions/get-measurements')
         const result = await response.json()
-        this.measurements = result.measurements
+
+        // Parse the CSV content
+        this.parseCSV(result.csvContent)
       } catch (error) {
         console.error('Failed to fetch measurements:', error)
       }
+    },
+    parseCSV(csvContent) {
+      // Split the CSV content into rows
+      const rows = csvContent.split('\n').slice(1) // Remove the header row
+
+      // Map the rows to measurement objects
+      this.measurements = rows.map((row) => {
+        const [exercise, name] = row.split(';') // Assuming the delimiter is semicolon
+        return { exercise, name }
+      })
     },
     updateCSV() {
       if (this.selectedMeasurements.length === 0) {
