@@ -1,13 +1,13 @@
 import { Octokit } from '@octokit/core'
 
 export const handler = async function (event, context) {
-  const GITHUB_TOKEN = process.env.GITHUB_TOKEN // Use environment variables for the token
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN
   const octokit = new Octokit({ auth: GITHUB_TOKEN })
 
-  const owner = 'AndriBryn' // Replace with your GitHub username
-  const repo = 'website' // Replace with your repository name
-  const path = 'public/data/TrainingPlanCSV.csv' // Path to the file in the repo
-  const branch = 'main' // Branch to commit to
+  const owner = 'AndriBryn'
+  const repo = 'website'
+  const path = 'public/data/TrainingPlanCSV.csv' // Path to the exercises file
+  const branch = 'main'
 
   try {
     const { data: fileData } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
@@ -19,9 +19,16 @@ export const handler = async function (event, context) {
 
     const csvContent = Buffer.from(fileData.content, 'base64').toString('utf8')
 
+    // Parse the CSV into an array of exercise objects
+    const rows = csvContent.split('\n').slice(1) // Remove the header row
+    const exercises = rows.map((row) => {
+      const [exercise, ability, image, video, description, sets, focus] = row.split(';') // Adjust based on delimiter
+      return { exercise, ability, focus }
+    })
+
     return {
       statusCode: 200,
-      body: JSON.stringify({ csvContent })
+      body: JSON.stringify({ exercises })
     }
   } catch (error) {
     console.error(error)

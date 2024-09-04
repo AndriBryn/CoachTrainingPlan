@@ -6,7 +6,7 @@
   <div>
     <h1>Club Data</h1>
 
-    <div v-if="measurements.length && clubsData.length">
+    <div v-if="measurements.length && clubsData.length && exercises.length">
       <div v-for="(club, index) in clubsData" :key="index" class="club">
         <h2>{{ club.clubName }}</h2>
 
@@ -32,12 +32,20 @@
           </li>
         </ul>
 
+        <!-- Display exercises with ability and focus -->
         <h3>Exercises</h3>
         <ul>
-          <li v-for="(exercise, i) in club.exercises" :key="i">{{ exercise }}</li>
+          <li v-for="(exercise, i) in exercises" :key="i">
+            <label>
+              <input type="checkbox" v-model="club.exercises" :value="exercise.exercise" />
+              {{ exercise.exercise }} - Ability: {{ exercise.ability }} - Focus:
+              {{ exercise.focus }}
+            </label>
+          </li>
         </ul>
       </div>
-      <!-- Button to submit the updated benchmarks -->
+
+      <!-- Button to submit the updated benchmarks and exercises -->
       <button @click="updateCSV">Update CSV</button>
     </div>
   </div>
@@ -48,12 +56,14 @@ export default {
   data() {
     return {
       measurements: [], // List of all measurements from get-measurements
+      exercises: [], // List of all exercises from get-exercises
       clubsData: [] // List of clubs and their data from get-csv-file
     }
   },
   mounted() {
     this.fetchClubData() // Fetch the initial club data
     this.fetchMeasurements() // Fetch the measurements
+    this.fetchExercises() // Fetch the exercises
   },
   methods: {
     async fetchClubData() {
@@ -85,6 +95,16 @@ export default {
         this.measurements = result.measurements // Use measurements from backend
       } catch (error) {
         console.error('Failed to fetch measurements:', error)
+      }
+    },
+
+    async fetchExercises() {
+      try {
+        const response = await fetch('/.netlify/functions/get-exercises')
+        const result = await response.json()
+        this.exercises = result.exercises // Use exercises from backend
+      } catch (error) {
+        console.error('Failed to fetch exercises:', error)
       }
     },
 
