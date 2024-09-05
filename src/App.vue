@@ -6,6 +6,22 @@
   <div>
     <h1>Club Data</h1>
 
+    <!-- Filter options -->
+    <div v-if="measurements.length">
+      <label>
+        <input type="radio" value="all" v-model="filterType" />
+        All
+      </label>
+      <label>
+        <input type="radio" value="withBall" v-model="filterType" />
+        With Ball
+      </label>
+      <label>
+        <input type="radio" value="withoutBall" v-model="filterType" />
+        Without Ball
+      </label>
+    </div>
+
     <div v-if="measurements.length && clubsData.length && exercises.length">
       <div v-for="(club, index) in clubsData" :key="index" class="club">
         <h2>{{ club.clubName }}</h2>
@@ -13,7 +29,7 @@
         <!-- Display all measurements with editable benchmarks -->
         <h3>Measurements</h3>
         <ul>
-          <li v-for="(measurement, i) in measurements" :key="i">
+          <li v-for="(measurement, i) in filteredMeasurements" :key="i">
             <label>
               <input
                 type="checkbox"
@@ -22,6 +38,7 @@
                 @change="ensureBenchmark(club, measurement.name)"
               />
               {{ measurement.exercise }}
+              ({{ measurement.withball ? 'With Ball' : 'Without Ball' }})
             </label>
             <input
               type="number"
@@ -57,13 +74,25 @@ export default {
     return {
       measurements: [], // List of all measurements from get-measurements
       exercises: [], // List of all exercises from get-exercises
-      clubsData: [] // List of clubs and their data from get-csv-file
+      clubsData: [], // List of clubs and their data from get-csv-file
+      filterType: 'all' // Filter for withBall or withoutBall or all
     }
   },
   mounted() {
     this.fetchClubData() // Fetch the initial club data
     this.fetchMeasurements() // Fetch the measurements
     this.fetchExercises() // Fetch the exercises
+  },
+  computed: {
+    // Filter measurements based on the selected filter type
+    filteredMeasurements() {
+      if (this.filterType === 'withBall') {
+        return this.measurements.filter((m) => m.withball)
+      } else if (this.filterType === 'withoutBall') {
+        return this.measurements.filter((m) => !m.withball)
+      }
+      return this.measurements
+    }
   },
   methods: {
     async fetchClubData() {

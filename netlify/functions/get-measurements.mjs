@@ -22,8 +22,8 @@ export const handler = async function (event, context) {
     // Parse the CSV into an array of objects
     const rows = csvContent.split('\n').slice(1) // Remove the header row
     const measurements = rows.map((row) => {
-      const [exercise, name] = row.split(';') // Adjust if delimiter is different
-      return { exercise, name }
+      const [exercise, name, withball] = row.split(';') // Adjust if delimiter is different
+      return { exercise, name, withball: withball === 'true' } // Ensure withball is a boolean
     })
 
     return {
@@ -35,7 +35,10 @@ export const handler = async function (event, context) {
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to retrieve the CSV file', details: error.message })
+      body: JSON.stringify({
+        error: 'Failed to retrieve the CSV file',
+        details: error.message
+      })
     }
   }
 }
