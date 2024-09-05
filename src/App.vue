@@ -6,8 +6,9 @@
   <div>
     <h1>Club Data</h1>
 
-    <!-- Filter options -->
+    <!-- Filter options for measurements -->
     <div v-if="measurements.length">
+      <h3>Filter Measurements</h3>
       <label>
         <input type="radio" value="all" v-model="filterType" />
         All
@@ -20,6 +21,29 @@
         <input type="radio" value="withoutBall" v-model="filterType" />
         Without Ball
       </label>
+    </div>
+
+    <!-- Filter options for exercises -->
+    <div v-if="exercises.length">
+      <h3>Filter Exercises</h3>
+
+      <!-- Ability Filter Dropdown -->
+      <label for="abilityFilter">Filter by Ability:</label>
+      <select id="abilityFilter" v-model="selectedAbility">
+        <option value="all">All Abilities</option>
+        <option v-for="ability in uniqueAbilities" :key="ability" :value="ability">
+          {{ ability }}
+        </option>
+      </select>
+
+      <!-- Focus Filter Dropdown -->
+      <label for="focusFilter">Filter by Focus:</label>
+      <select id="focusFilter" v-model="selectedFocus">
+        <option value="all">All Focuses</option>
+        <option v-for="focus in uniqueFocuses" :key="focus" :value="focus">
+          {{ focus }}
+        </option>
+      </select>
     </div>
 
     <div v-if="measurements.length && clubsData.length && exercises.length">
@@ -52,7 +76,7 @@
         <!-- Display exercises with ability and focus -->
         <h3>Exercises</h3>
         <ul>
-          <li v-for="(exercise, i) in exercises" :key="i">
+          <li v-for="(exercise, i) in filteredExercises" :key="i">
             <label>
               <input type="checkbox" v-model="club.exercises" :value="exercise.exercise" />
               {{ exercise.exercise }} - Ability: {{ exercise.ability }} - Focus:
@@ -75,7 +99,9 @@ export default {
       measurements: [], // List of all measurements from get-measurements
       exercises: [], // List of all exercises from get-exercises
       clubsData: [], // List of clubs and their data from get-csv-file
-      filterType: 'all' // Filter for withBall or withoutBall or all
+      filterType: 'all', // Filter for withBall or withoutBall or all
+      selectedAbility: 'all', // Filter for exercises by ability
+      selectedFocus: 'all' // Filter for exercises by focus
     }
   },
   mounted() {
@@ -92,6 +118,26 @@ export default {
         return this.measurements.filter((m) => !m.withball)
       }
       return this.measurements
+    },
+
+    // Unique abilities for the dropdown filter
+    uniqueAbilities() {
+      return [...new Set(this.exercises.map((exercise) => exercise.ability))].filter(Boolean)
+    },
+
+    // Unique focuses for the dropdown filter
+    uniqueFocuses() {
+      return [...new Set(this.exercises.map((exercise) => exercise.focus))].filter(Boolean)
+    },
+
+    // Filter exercises based on selected ability and focus
+    filteredExercises() {
+      return this.exercises.filter((exercise) => {
+        const abilityMatch =
+          this.selectedAbility === 'all' || exercise.ability === this.selectedAbility
+        const focusMatch = this.selectedFocus === 'all' || exercise.focus === this.selectedFocus
+        return abilityMatch && focusMatch
+      })
     }
   },
   methods: {
