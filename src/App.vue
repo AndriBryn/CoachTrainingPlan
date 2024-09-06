@@ -6,101 +6,118 @@
   <div>
     <h1>Club Data</h1>
 
-    <!-- Club selection and editing mode filter -->
-    <div v-if="filteredClubs.length && !selectedExercise">
-      <div v-if="clubsData.length">
-        <h3>Select Club</h3>
-        <select v-model="selectedClub">
-          <option value="all">All Clubs</option>
-          <option v-for="(club, index) in clubsData" :key="index" :value="club.clubName">
-            {{ club.clubName }}
-          </option>
-        </select>
-      </div>
+    <!-- Filter to select which club's data to show -->
+    <div v-if="clubsData.length">
+      <h3>Select Club</h3>
+      <select v-model="selectedClub">
+        <option value="all">All Clubs</option>
+        <option v-for="(club, index) in clubsData" :key="index" :value="club.clubName">
+          {{ club.clubName }}
+        </option>
+      </select>
+    </div>
 
-      <!-- Toggle between Edit Measurements and Edit Exercises -->
-      <div class="edit-toggle">
-        <button
-          @click="editingMode = 'measurements'"
-          :class="{ active: editingMode === 'measurements' }"
-        >
-          Edit Measurements
-        </button>
-        <button @click="editingMode = 'exercises'" :class="{ active: editingMode === 'exercises' }">
-          Edit Exercises
-        </button>
-      </div>
+    <!-- Filter options for measurements -->
+    <div v-if="measurements.length">
+      <h3>Filter Measurements</h3>
+      <label>
+        <input type="radio" value="all" v-model="filterType" />
+        All
+      </label>
+      <label>
+        <input type="radio" value="withBall" v-model="filterType" />
+        With Ball
+      </label>
+      <label>
+        <input type="radio" value="withoutBall" v-model="filterType" />
+        Without Ball
+      </label>
+    </div>
 
-      <!-- Display filtered measurements or exercises based on editingMode -->
-      <div v-if="editingMode === 'measurements'">
-        <h3>Measurements</h3>
-        <ul v-if="club && club.measurements && club.measurements.length">
-          <li v-for="(measurement, i) in filteredMeasurements" :key="i">
-            <label>
+    <!-- Filter options for exercises -->
+    <div v-if="exercises.length">
+      <h3>Filter Exercises</h3>
+
+      <!-- Ability Filter Dropdown -->
+      <label for="abilityFilter">Filter by Ability:</label>
+      <select id="abilityFilter" v-model="selectedAbility">
+        <option value="all">All Abilities</option>
+        <option v-for="ability in uniqueAbilities" :key="ability" :value="ability">
+          {{ ability }}
+        </option>
+      </select>
+
+      <!-- Focus Filter Dropdown -->
+      <label for="focusFilter">Filter by Focus:</label>
+      <select id="focusFilter" v-model="selectedFocus">
+        <option value="all">All Focuses</option>
+        <option v-for="focus in uniqueFocuses" :key="focus" :value="focus">
+          {{ focus }}
+        </option>
+      </select>
+    </div>
+
+    <div v-if="filteredClubs.length && measurements.length && exercises.length">
+      <div v-for="(club, index) in filteredClubs" :key="index" class="club">
+        <h2>{{ club.clubName }}</h2>
+
+        <!-- Toggle between Edit Measurements and Edit Exercises -->
+        <div class="edit-toggle">
+          <button
+            @click="editingMode = 'measurements'"
+            :class="{ active: editingMode === 'measurements' }"
+          >
+            Edit Measurements
+          </button>
+          <button
+            @click="editingMode = 'exercises'"
+            :class="{ active: editingMode === 'exercises' }"
+          >
+            Edit Exercises
+          </button>
+        </div>
+
+        <!-- Display measurements if the user selected Edit Measurements -->
+        <div v-if="editingMode === 'measurements'">
+          <h3>Measurements</h3>
+          <ul>
+            <li v-for="(measurement, i) in filteredMeasurements" :key="i">
+              <label>
+                <input
+                  type="checkbox"
+                  v-model="club.measurements"
+                  :value="measurement.name"
+                  @change="ensureBenchmark(club, measurement.name)"
+                />
+                {{ measurement.exercise }}
+                ({{ measurement.withball ? 'With Ball' : 'Without Ball' }})
+              </label>
               <input
-                type="checkbox"
-                v-model="club.measurements"
-                :value="measurement.name"
-                @change="ensureBenchmark(club, measurement.name)"
+                type="number"
+                v-if="club.measurements.includes(measurement.name)"
+                v-model.number="club.benchmarks[club.measurements.indexOf(measurement.name)]"
+                placeholder="Enter Benchmark"
               />
-              {{ measurement.exercise }}
-              ({{ measurement.withball ? 'With Ball' : 'Without Ball' }})
-            </label>
-            <input
-              type="number"
-              v-if="club.measurements.includes(measurement.name)"
-              v-model.number="club.benchmarks[club.measurements.indexOf(measurement.name)]"
-              placeholder="Enter Benchmark"
-            />
-          </li>
-        </ul>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Display exercises if the user selected Edit Exercises -->
+        <div v-if="editingMode === 'exercises'">
+          <h3>Exercises</h3>
+          <ul>
+            <li v-for="(exercise, i) in filteredExercises" :key="i">
+              <label>
+                <input type="checkbox" v-model="club.exercises" :value="exercise.exercise" />
+                {{ exercise.exercise }} - Ability: {{ exercise.ability }} - Focus:
+                {{ exercise.focus }}
+              </label>
+            </li>
+          </ul>
+        </div>
       </div>
 
-      <div v-if="editingMode === 'exercises'">
-        <h3>Exercises</h3>
-        <ul v-if="filteredExercises.length">
-          <li v-for="(exercise, i) in filteredExercises" :key="i">
-            <label>
-              <input type="checkbox" v-model="club.exercises" :value="exercise.exercise" />
-              {{ exercise.exercise }} - Ability: {{ exercise.ability }} - Focus:
-              {{ exercise.focus }}
-            </label>
-            <button @click="viewExerciseDetails(exercise)">More Information</button>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- Display the selected exercise details if selectedExercise is set -->
-    <div v-if="selectedExercise" class="exercise-details">
-      <button @click="selectedExercise = null">Back</button>
-
-      <h2>{{ selectedExercise.exercise }}</h2>
-      <p><strong>Ability:</strong> {{ selectedExercise.ability }}</p>
-      <p><strong>Focus:</strong> {{ selectedExercise.focus }}</p>
-      <p><strong>Description:</strong> {{ selectedExercise.description }}</p>
-
-      <!-- If there's an image, display it -->
-      <div v-if="selectedExercise.image">
-        <img :src="selectedExercise.image" alt="Exercise Image" class="exercise-image" />
-      </div>
-
-      <!-- If there's a video, display it -->
-      <div v-if="selectedExercise.video">
-        <iframe
-          :src="selectedExercise.video"
-          width="100%"
-          height="400"
-          frameborder="0"
-          allowfullscreen
-        ></iframe>
-      </div>
-    </div>
-
-    <!-- Button to submit the updated benchmarks and exercises -->
-    <div
-      v-if="filteredClubs.length && measurements.length && exercises.length && !selectedExercise"
-    >
+      <!-- Button to submit the updated benchmarks and exercises -->
       <button @click="updateCSV">Update CSV</button>
     </div>
   </div>
@@ -117,22 +134,17 @@ export default {
       selectedAbility: 'all', // Filter for exercises by ability
       selectedFocus: 'all', // Filter for exercises by focus
       selectedClub: 'all', // Filter for which club to display
-      editingMode: 'measurements', // Toggle between 'measurements' and 'exercises'
-      selectedExercise: null // Store the selected exercise for more information
+      editingMode: 'measurements' // Toggle between 'measurements' and 'exercises'
     }
   },
   mounted() {
     this.fetchClubData() // Fetch the initial club data
     this.fetchMeasurements() // Fetch the measurements
     this.fetchExercises() // Fetch the exercises
-
-    console.log('Mounted: Clubs Data:', this.clubsData)
-    console.log('Mounted: Measurements:', this.measurements)
-    console.log('Mounted: Exercises:', this.exercises)
   },
   computed: {
+    // Filter measurements based on the selected filter type
     filteredMeasurements() {
-      // Filter measurements based on the selected filter type
       if (this.filterType === 'withBall') {
         return this.measurements.filter((m) => m.withball)
       } else if (this.filterType === 'withoutBall') {
@@ -140,8 +152,19 @@ export default {
       }
       return this.measurements
     },
+
+    // Unique abilities for the dropdown filter
+    uniqueAbilities() {
+      return [...new Set(this.exercises.map((exercise) => exercise.ability))].filter(Boolean)
+    },
+
+    // Unique focuses for the dropdown filter
+    uniqueFocuses() {
+      return [...new Set(this.exercises.map((exercise) => exercise.focus))].filter(Boolean)
+    },
+
+    // Filter exercises based on selected ability and focus
     filteredExercises() {
-      // Filter exercises based on selected ability and focus
       return this.exercises.filter((exercise) => {
         const abilityMatch =
           this.selectedAbility === 'all' || exercise.ability === this.selectedAbility
@@ -149,8 +172,9 @@ export default {
         return abilityMatch && focusMatch
       })
     },
+
+    // Filter clubs based on the selected club
     filteredClubs() {
-      // Filter clubs based on the selected club
       if (this.selectedClub === 'all') {
         return this.clubsData
       }
@@ -247,11 +271,6 @@ export default {
       }
     },
 
-    // When the "More Information" button is clicked, set the selectedExercise to show details
-    viewExerciseDetails(exercise) {
-      this.selectedExercise = exercise
-    },
-
     handleDrop(event) {
       const file = event.dataTransfer.files[0]
 
@@ -329,16 +348,8 @@ export default {
   color: white;
   border-color: #007bff;
 }
-.exercise-details {
-  padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-.exercise-image {
-  width: 100%;
-  max-width: 400px;
-  height: auto;
-  margin-bottom: 20px;
+input[type='number'] {
+  margin-left: 10px;
 }
 button {
   margin-top: 20px;
