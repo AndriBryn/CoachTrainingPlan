@@ -104,7 +104,14 @@
             <h3>Exercises</h3>
             <ul>
               <li v-for="(exercise, i) in filteredExercises" :key="i">
-                <div style="display: flex; justify-content: space-between">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    text-align: center;
+                    border: solid;
+                  "
+                >
                   <input type="checkbox" v-model="club.exercises" :value="exercise.exercise" />
                   <div>
                     {{ exercise.exercise }}
