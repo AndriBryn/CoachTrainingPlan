@@ -411,7 +411,6 @@ input[type='number'] {
   margin-left: 10px;
 }
 button {
-  margin-top: 20px;
   padding: 10px 20px;
   font-size: 16px;
   cursor: pointer;
