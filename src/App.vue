@@ -122,7 +122,14 @@
                   <div>-</div>
                   <div>Focus: {{ exercise.focus }}</div>
                   <!-- More Info Button -->
-                  <div>
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: center;
+                      align-items: center;
+                      height: 100%;
+                    "
+                  >
                     <button @click="viewExerciseDetails(exercise)">More Info</button>
                   </div>
                 </div>
