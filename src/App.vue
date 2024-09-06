@@ -109,7 +109,6 @@
                     display: flex;
                     justify-content: space-between;
                     text-align: center;
-                    border: solid;
                     align-items: center;
                   "
                 >
@@ -371,19 +370,6 @@ export default {
 </script>
 
 <style scoped>
-.upload-area {
-  width: 100%;
-  height: 200px;
-  border: 2px dashed #ccc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  margin: 20px 0;
-}
-.upload-area p {
-  color: #666;
-}
 .club {
   border: 1px solid #ccc;
   padding: 10px;
