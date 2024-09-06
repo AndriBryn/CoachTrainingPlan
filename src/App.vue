@@ -6,6 +6,17 @@
   <div>
     <h1>Club Data</h1>
 
+    <!-- Filter to select which club's data to show -->
+    <div v-if="clubsData.length">
+      <h3>Select Club</h3>
+      <select v-model="selectedClub">
+        <option value="all">All Clubs</option>
+        <option v-for="(club, index) in clubsData" :key="index" :value="club.clubName">
+          {{ club.clubName }}
+        </option>
+      </select>
+    </div>
+
     <!-- Filter options for measurements -->
     <div v-if="measurements.length">
       <h3>Filter Measurements</h3>
@@ -46,8 +57,8 @@
       </select>
     </div>
 
-    <div v-if="measurements.length && clubsData.length && exercises.length">
-      <div v-for="(club, index) in clubsData" :key="index" class="club">
+    <div v-if="filteredClubs.length && measurements.length && exercises.length">
+      <div v-for="(club, index) in filteredClubs" :key="index" class="club">
         <h2>{{ club.clubName }}</h2>
 
         <!-- Display all measurements with editable benchmarks -->
@@ -101,7 +112,8 @@ export default {
       clubsData: [], // List of clubs and their data from get-csv-file
       filterType: 'all', // Filter for withBall or withoutBall or all
       selectedAbility: 'all', // Filter for exercises by ability
-      selectedFocus: 'all' // Filter for exercises by focus
+      selectedFocus: 'all', // Filter for exercises by focus
+      selectedClub: 'all' // Filter for which club to display
     }
   },
   mounted() {
@@ -138,6 +150,14 @@ export default {
         const focusMatch = this.selectedFocus === 'all' || exercise.focus === this.selectedFocus
         return abilityMatch && focusMatch
       })
+    },
+
+    // Filter clubs based on the selected club
+    filteredClubs() {
+      if (this.selectedClub === 'all') {
+        return this.clubsData
+      }
+      return this.clubsData.filter((club) => club.clubName === this.selectedClub)
     }
   },
   methods: {
