@@ -35,7 +35,7 @@
         <h3>Filter Exercises</h3>
 
         <!-- Ability Filter Dropdown -->
-        <label for="abilityFilter">Filter by Ability:</label>
+        <label for="abilityFilter">Filter by Ability: </label>
         <select id="abilityFilter" v-model="selectedAbility">
           <option value="all">All Abilities</option>
           <option v-for="ability in uniqueAbilities" :key="ability" :value="ability">
@@ -44,7 +44,7 @@
         </select>
 
         <!-- Focus Filter Dropdown -->
-        <label for="focusFilter">Filter by Focus:</label>
+        <label for="focusFilter">Filter by Focus: </label>
         <select id="focusFilter" v-model="selectedFocus">
           <option value="all">All Focuses</option>
           <option v-for="focus in uniqueFocuses" :key="focus" :value="focus">
@@ -106,11 +106,18 @@
               <li v-for="(exercise, i) in filteredExercises" :key="i">
                 <label>
                   <input type="checkbox" v-model="club.exercises" :value="exercise.exercise" />
-                  {{ exercise.exercise }} - Ability: {{ exercise.ability }} - Focus:
-                  {{ exercise.focus }}
+                  <div>
+                    {{ exercise.exercise }}
+                  </div>
+                  <div>-</div>
+                  <div>Ability: {{ exercise.ability }}</div>
+                  <div>-</div>
+                  <div>Focus: {{ exercise.focus }}</div>
                 </label>
                 <!-- More Info Button -->
-                <button @click="viewExerciseDetails(exercise)">More Info</button>
+                <div>
+                  <button @click="viewExerciseDetails(exercise)">More Info</button>
+                </div>
               </li>
             </ul>
           </div>
