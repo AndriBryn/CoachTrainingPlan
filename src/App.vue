@@ -113,10 +113,10 @@
                   <div>Ability: {{ exercise.ability }}</div>
                   <div>-</div>
                   <div>Focus: {{ exercise.focus }}</div>
-                </div>
-                <!-- More Info Button -->
-                <div>
-                  <button @click="viewExerciseDetails(exercise)">More Info</button>
+                  <!-- More Info Button -->
+                  <div>
+                    <button @click="viewExerciseDetails(exercise)">More Info</button>
+                  </div>
                 </div>
               </li>
             </ul>
