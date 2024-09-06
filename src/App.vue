@@ -104,7 +104,7 @@
             <h3>Exercises</h3>
             <ul>
               <li v-for="(exercise, i) in filteredExercises" :key="i">
-                <label>
+                <div style="display: flex; justify-content: space-between">
                   <input type="checkbox" v-model="club.exercises" :value="exercise.exercise" />
                   <div>
                     {{ exercise.exercise }}
@@ -113,7 +113,7 @@
                   <div>Ability: {{ exercise.ability }}</div>
                   <div>-</div>
                   <div>Focus: {{ exercise.focus }}</div>
-                </label>
+                </div>
                 <!-- More Info Button -->
                 <div>
                   <button @click="viewExerciseDetails(exercise)">More Info</button>
