@@ -110,6 +110,7 @@
                     justify-content: space-between;
                     text-align: center;
                     border: solid;
+                    transform: translateY(0%);
                   "
                 >
                   <input type="checkbox" v-model="club.exercises" :value="exercise.exercise" />
