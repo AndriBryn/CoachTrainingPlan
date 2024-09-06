@@ -34,7 +34,7 @@
       <!-- Display filtered measurements or exercises based on editingMode -->
       <div v-if="editingMode === 'measurements'">
         <h3>Measurements</h3>
-        <ul v-if="filteredMeasurements.length">
+        <ul v-if="club && club.measurements && club.measurements.length">
           <li v-for="(measurement, i) in filteredMeasurements" :key="i">
             <label>
               <input
