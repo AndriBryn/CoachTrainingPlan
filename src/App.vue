@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="page">
     <!-- Display club selection, filters, and content only if no exercise is selected -->
     <div v-if="!selectedExercise">
       <!-- Filter to select which club's data to show -->
@@ -404,5 +404,13 @@ button {
   max-width: 400px;
   height: auto;
   margin-bottom: 20px;
+}
+.page {
+  width: 100%;
+  border: solid;
+  justify-content: center;
+  text-align: center;
+  align-items: center;
+  align-content: center;
 }
 </style>
