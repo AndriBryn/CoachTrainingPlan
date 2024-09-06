@@ -1,11 +1,5 @@
 <template>
-  <div class="upload-area" @dragover.prevent @drop.prevent="handleDrop">
-    <p>Drag & Drop your CSV file here</p>
-  </div>
-
   <div>
-    <h1>Club Data</h1>
-
     <!-- Display club selection, filters, and content only if no exercise is selected -->
     <div v-if="!selectedExercise">
       <!-- Filter to select which club's data to show -->
@@ -20,7 +14,7 @@
       </div>
 
       <!-- Filter options for measurements -->
-      <div v-if="measurements.length">
+      <div v-if="measurements.length && editingMode === 'measurements'">
         <h3>Filter Measurements</h3>
         <label>
           <input type="radio" value="all" v-model="filterType" />
@@ -37,7 +31,7 @@
       </div>
 
       <!-- Filter options for exercises -->
-      <div v-if="exercises.length">
+      <div v-if="exercises.length && editingMode === 'exercises'">
         <h3>Filter Exercises</h3>
 
         <!-- Ability Filter Dropdown -->
