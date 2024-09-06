@@ -61,40 +61,60 @@
       <div v-for="(club, index) in filteredClubs" :key="index" class="club">
         <h2>{{ club.clubName }}</h2>
 
-        <!-- Display all measurements with editable benchmarks -->
-        <h3>Measurements</h3>
-        <ul>
-          <li v-for="(measurement, i) in filteredMeasurements" :key="i">
-            <label>
-              <input
-                type="checkbox"
-                v-model="club.measurements"
-                :value="measurement.name"
-                @change="ensureBenchmark(club, measurement.name)"
-              />
-              {{ measurement.exercise }}
-              ({{ measurement.withball ? 'With Ball' : 'Without Ball' }})
-            </label>
-            <input
-              type="number"
-              v-if="club.measurements.includes(measurement.name)"
-              v-model.number="club.benchmarks[club.measurements.indexOf(measurement.name)]"
-              placeholder="Enter Benchmark"
-            />
-          </li>
-        </ul>
+        <!-- Toggle between Edit Measurements and Edit Exercises -->
+        <div class="edit-toggle">
+          <button
+            @click="editingMode = 'measurements'"
+            :class="{ active: editingMode === 'measurements' }"
+          >
+            Edit Measurements
+          </button>
+          <button
+            @click="editingMode = 'exercises'"
+            :class="{ active: editingMode === 'exercises' }"
+          >
+            Edit Exercises
+          </button>
+        </div>
 
-        <!-- Display exercises with ability and focus -->
-        <h3>Exercises</h3>
-        <ul>
-          <li v-for="(exercise, i) in filteredExercises" :key="i">
-            <label>
-              <input type="checkbox" v-model="club.exercises" :value="exercise.exercise" />
-              {{ exercise.exercise }} - Ability: {{ exercise.ability }} - Focus:
-              {{ exercise.focus }}
-            </label>
-          </li>
-        </ul>
+        <!-- Display measurements if the user selected Edit Measurements -->
+        <div v-if="editingMode === 'measurements'">
+          <h3>Measurements</h3>
+          <ul>
+            <li v-for="(measurement, i) in filteredMeasurements" :key="i">
+              <label>
+                <input
+                  type="checkbox"
+                  v-model="club.measurements"
+                  :value="measurement.name"
+                  @change="ensureBenchmark(club, measurement.name)"
+                />
+                {{ measurement.exercise }}
+                ({{ measurement.withball ? 'With Ball' : 'Without Ball' }})
+              </label>
+              <input
+                type="number"
+                v-if="club.measurements.includes(measurement.name)"
+                v-model.number="club.benchmarks[club.measurements.indexOf(measurement.name)]"
+                placeholder="Enter Benchmark"
+              />
+            </li>
+          </ul>
+        </div>
+
+        <!-- Display exercises if the user selected Edit Exercises -->
+        <div v-if="editingMode === 'exercises'">
+          <h3>Exercises</h3>
+          <ul>
+            <li v-for="(exercise, i) in filteredExercises" :key="i">
+              <label>
+                <input type="checkbox" v-model="club.exercises" :value="exercise.exercise" />
+                {{ exercise.exercise }} - Ability: {{ exercise.ability }} - Focus:
+                {{ exercise.focus }}
+              </label>
+            </li>
+          </ul>
+        </div>
       </div>
 
       <!-- Button to submit the updated benchmarks and exercises -->
@@ -113,7 +133,8 @@ export default {
       filterType: 'all', // Filter for withBall or withoutBall or all
       selectedAbility: 'all', // Filter for exercises by ability
       selectedFocus: 'all', // Filter for exercises by focus
-      selectedClub: 'all' // Filter for which club to display
+      selectedClub: 'all', // Filter for which club to display
+      editingMode: 'measurements' // Toggle between 'measurements' and 'exercises'
     }
   },
   mounted() {
@@ -308,6 +329,24 @@ export default {
   border: 1px solid #ccc;
   padding: 10px;
   margin-bottom: 20px;
+}
+.edit-toggle {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.edit-toggle button {
+  width: 48%;
+  padding: 10px;
+  cursor: pointer;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+.edit-toggle button.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
 }
 input[type='number'] {
   margin-left: 10px;
