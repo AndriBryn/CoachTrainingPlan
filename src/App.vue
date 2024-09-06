@@ -125,6 +125,10 @@ export default {
     this.fetchClubData() // Fetch the initial club data
     this.fetchMeasurements() // Fetch the measurements
     this.fetchExercises() // Fetch the exercises
+
+    console.log('Mounted: Clubs Data:', this.clubsData)
+    console.log('Mounted: Measurements:', this.measurements)
+    console.log('Mounted: Exercises:', this.exercises)
   },
   computed: {
     filteredMeasurements() {
