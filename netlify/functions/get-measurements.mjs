@@ -1,4 +1,10 @@
 import { Octokit } from '@octokit/core'
+import dotenv from 'dotenv'
+
+// Load environment variables from .env file if running locally
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config()
+}
 
 export const handler = async function (event, context) {
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN // Use environment variables for the token
