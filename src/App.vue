@@ -251,6 +251,9 @@
     <div v-if="selectedExercise" class="exercise-details-container">
       <!-- Left Arrow Button for Previous Exercise -->
       <button @click="previousExercise" class="arrow-button left-arrow">
+        <span v-if="previousExerciseName" style="color: white"
+          >Previous: {{ previousExerciseName }}</span
+        >
         <img src="/images/LeftWhite.png" alt="Previous Exercise" class="arrow-image" />
       </button>
 
@@ -321,6 +324,7 @@
 
       <!-- Right Arrow Button for Next Exercise -->
       <button @click="nextExercise" class="arrow-button right-arrow">
+        <span v-if="nextExerciseName" style="color: white">Next: {{ nextExerciseName }}</span>
         <img src="/images/RightWhite.png" alt="Next Exercise" class="arrow-image" />
       </button>
     </div>
@@ -351,6 +355,24 @@ export default {
     this.fetchExercises() // Fetch the exercises
   },
   computed: {
+    previousExerciseName() {
+      if (this.filteredExercises.length > 0 && this.selectedExercise) {
+        const prevIndex =
+          (this.currentExerciseIndex - 1 + this.filteredExercises.length) %
+          this.filteredExercises.length
+        return this.filteredExercises[prevIndex]?.exercise || ''
+      }
+      return ''
+    },
+
+    // Get the name of the next exercise
+    nextExerciseName() {
+      if (this.filteredExercises.length > 0 && this.selectedExercise) {
+        const nextIndex = (this.currentExerciseIndex + 1) % this.filteredExercises.length
+        return this.filteredExercises[nextIndex]?.exercise || ''
+      }
+      return ''
+    },
     // Filter measurements based on the selected filter type
     filteredMeasurements() {
       if (this.filterType === 'withBall') {
@@ -678,13 +700,17 @@ button {
 }
 
 .arrow-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   background: none;
   border: none;
   cursor: pointer;
-  width: 10%; /* Adjust as needed */
+  width: 20%; /* Adjust as needed */
 }
 
 .arrow-image {
+  margin-top: 10px;
   width: 50px; /* Adjust size of the arrow */
   height: auto;
 }
