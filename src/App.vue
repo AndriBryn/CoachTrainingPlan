@@ -303,6 +303,19 @@
         </p>
         <p>Description: {{ selectedExercise.description }}</p>
 
+        <!-- Add "Add Exercise" and "Remove Exercise" buttons -->
+        <div class="exercise-toggle-buttons">
+          <button
+            v-if="!currentClub.exercises.includes(selectedExercise.exercise)"
+            @click="toggleExerciseSelection(currentClub, selectedExercise.exercise)"
+          >
+            Add Exercise
+          </button>
+          <button v-else @click="toggleExerciseSelection(currentClub, selectedExercise.exercise)">
+            Remove Exercise
+          </button>
+        </div>
+
         <!-- Modal for Vimeo Video -->
         <div v-if="showVideo" class="modal-overlay" @click="closeVideo">
           <div class="modal-content" @click.stop>
@@ -409,6 +422,9 @@ export default {
         return this.clubsData
       }
       return this.clubsData.filter((club) => club.clubName === this.selectedClub)
+    },
+    currentClub() {
+      return this.filteredClubs.find((club) => club.clubName === this.selectedClub) || {}
     }
   },
   methods: {
