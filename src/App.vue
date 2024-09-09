@@ -254,13 +254,35 @@
         <img src="/images/LeftWhite.png" alt="Previous Exercise" class="arrow-image" />
       </button>
 
-      <!-- Exercise Details -->
       <div class="exercise-details">
         <button @click="clearExerciseSelection" class="back-button">Back to Edit Exercises</button>
+
+        <!-- Add the indicators for "Has Video" and "Has Image" -->
+        <div class="indicators">
+          <!-- Video Indicator -->
+          <div class="tooltip">
+            <img
+              :src="selectedExercise.video ? '/images/play.png' : '/images/play-grey.png'"
+              :alt="selectedExercise.video ? 'Has video' : 'No video'"
+              class="icon"
+            />
+            <span class="tooltiptext">{{ selectedExercise.video ? 'Has video' : 'No video' }}</span>
+          </div>
+
+          <!-- Image Indicator -->
+          <div class="tooltip">
+            <img
+              :src="selectedExercise.image ? '/images/camera.png' : '/images/camera-grey.png'"
+              :alt="selectedExercise.image ? 'Has image' : 'No image'"
+              class="icon"
+            />
+            <span class="tooltiptext">{{ selectedExercise.image ? 'Has image' : 'No image' }}</span>
+          </div>
+        </div>
+
         <!-- Display image if available -->
         <div class="image-container" style="margin-top: 20px">
           <img :src="selectedExercise.image" alt="Exercise Image" class="exercise-image" />
-
           <!-- Show play button overlay if a video is available -->
           <img
             v-if="selectedExercise && selectedExercise.video"
@@ -270,12 +292,14 @@
             @click="playVideo(selectedExercise)"
           />
         </div>
+
         <h2>{{ selectedExercise.exercise }}</h2>
         <p>
           Ability: {{ selectedExercise.ability }} - Focus: {{ selectedExercise.focus }} -
           {{ selectedExercise.sets || 'Sets: Not specified' }}
         </p>
         <p>Description: {{ selectedExercise.description }}</p>
+
         <!-- Modal for Vimeo Video -->
         <div v-if="showVideo" class="modal-overlay" @click="closeVideo">
           <div class="modal-content" @click.stop>
