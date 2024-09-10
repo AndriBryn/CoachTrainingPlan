@@ -150,10 +150,10 @@
                 font-size: x-large;
               "
             >
-              <div style="width: 300px; margin-left: 100px">Exercise</div>
-              <div style="width: 70px"></div>
+              <div style="width: 300px; margin-left: 95px">Exercise</div>
+              <div style="width: 30px"></div>
               <div style="width: 300px">Ability</div>
-              <div style="width: 70px"></div>
+              <div style="width: 30px"></div>
               <div style="width: 300px">Focus</div>
               <div style="width: 220px">Other Info</div>
             </div>
@@ -202,16 +202,35 @@
                     <div class="image-container-2">
                       <img :src="exercise.image" alt="Exercise Image" class="exercise-image-2" />
                     </div>
-                    <!-- More Info Button -->
-                    <div
-                      style="
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        height: 100%;
-                      "
-                    >
-                      <button @click="viewExerciseDetails(exercise)">More Info</button>
+                    <div style="display: flex; flex-direction: column">
+                      <!-- More Info Button -->
+                      <div
+                        style="
+                          display: flex;
+                          justify-content: center;
+                          align-items: center;
+                          height: 100%;
+                        "
+                      >
+                        <button @click="viewExerciseDetails(exercise)">More Info</button>
+                      </div>
+                      <div style="display: flex; align-items: center; justify-content: center">
+                        <!-- Intensity Display with Tooltip -->
+                        <div class="tooltip-2">
+                          <div
+                            v-for="(icon, index) in getIntensityIcons(exercise.intensity)"
+                            :key="index"
+                          >
+                            <img
+                              :src="icon"
+                              alt="Intensity Lightning Icon"
+                              class="icon"
+                              style="width: 15px; height: 15px"
+                            />
+                          </div>
+                          <span class="tooltiptext">Intensity: {{ exercise.intensity }}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -281,6 +300,26 @@
               class="play-button"
               @click="playVideo(selectedExercise)"
             />
+          </div>
+
+          <!-- Intensity Display with Tooltip -->
+          <div
+            style="display: flex; justify-content: center; align-items: center; margin-top: 20px"
+          >
+            <div class="tooltip">
+              <div
+                v-for="(icon, index) in getIntensityIcons(selectedExercise.intensity)"
+                :key="index"
+              >
+                <img
+                  :src="icon"
+                  alt="Intensity Lightning Icon"
+                  class="icon"
+                  style="width: 30px; height: 30px"
+                />
+              </div>
+              <span class="tooltiptext">Intensity: {{ selectedExercise.intensity }}</span>
+            </div>
           </div>
 
           <h2>{{ selectedExercise.exercise }}</h2>
@@ -443,7 +482,10 @@ export default {
       try {
         const response = await fetch('/.netlify/functions/get-exercises')
         const result = await response.json()
-        this.exercises = result.exercises // Use exercises from backend
+        this.exercises = result.exercises.map((exercise) => ({
+          ...exercise,
+          intensity: parseInt(exercise.intensity, 10) || 0 // Ensure intensity is a number, default to 0
+        }))
       } catch (error) {
         console.error('Failed to fetch exercises:', error)
       }
@@ -563,6 +605,18 @@ export default {
     },
     closeVideo() {
       this.showVideo = false
+    },
+    getIntensityIcons(intensity) {
+      const icons = []
+      for (let i = 0; i < 5; i++) {
+        // Push green icon for intensity level and grey for the remaining
+        if (i < intensity) {
+          icons.push('/images/lightning.png') // Green lightning bolt
+        } else {
+          icons.push('/images/lightning-grey.png') // Grey lightning bolt
+        }
+      }
+      return icons
     }
   }
 }
@@ -675,6 +729,41 @@ button {
   visibility: visible;
   opacity: 1;
 }
+
+.tooltip-2 {
+  width: 60px;
+  position: relative;
+  display: inline-flex; /* Use flexbox to align contents vertically */
+  align-items: center; /* Center the content vertically */
+  justify-content: center; /* Optionally, center horizontally too */
+}
+
+.tooltip-2 img {
+  vertical-align: middle; /* Ensures image aligns vertically in the line */
+  width: 50px;
+  height: 50px;
+}
+.tooltip-2 .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%; /* Position above the icon */
+  left: 50%;
+  margin-left: -60px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip-2:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
 .exercise-details-container {
   display: flex;
   justify-content: space-between;
@@ -715,11 +804,11 @@ button {
 
 .image-container-2 {
   position: relative;
-  width: 50px;
+  width: 75px;
   height: 100%; /* Takes up 100% of its parent container */
-  max-height: 20px;
+  max-height: 80px;
   margin-right: 10px;
-  margin-top: -7px;
+  margin-top: 0px;
   border-radius: 5px;
   text-align: center; /* Optional, to center the contents */
 }
@@ -823,5 +912,8 @@ iframe {
   align-items: center;
   margin-top: 10px;
   font-size: large;
+}
+.icon {
+  margin-right: 5px;
 }
 </style>

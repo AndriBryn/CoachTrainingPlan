@@ -29,20 +29,24 @@ export const handler = async function (event, context) {
       throw new Error('File content not found')
     }
 
+    // Decode the base64 content of the file
     const csvContent = Buffer.from(fileData.content, 'base64').toString('utf8')
 
     // Parse the CSV into an array of exercise objects
     const rows = csvContent.split('\n').slice(1) // Remove the header row
+
+    // Assuming the intensity is the 8th value, after sets
     const exercises = rows.map((row) => {
-      const [exercise, ability, image, video, description, sets, focus] = row.split(';') // Adjust based on delimiter
+      const [exercise, ability, image, video, description, sets, focus, intensity] = row.split(';') // Adjust based on delimiter
       return {
-        exercise, // Display now
-        ability, // Display now
-        focus, // Display now
-        image, // Use in future
-        video, // Use in future
-        description, // Use in future
-        sets // Use in future
+        exercise, // Exercise name
+        ability, // Ability
+        focus, // Focus
+        image, // Image URL
+        video, // Video URL
+        description, // Description of the exercise
+        sets, // Number of sets
+        intensity: parseInt(intensity, 10) || 0 // Convert intensity to an integer (default to 0 if missing)
       }
     })
 
