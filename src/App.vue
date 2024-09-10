@@ -369,7 +369,7 @@ export default {
       selectedAbility: 'all', // Filter for exercises by ability
       selectedFocus: 'all', // Filter for exercises by focus
       selectedClub: 'all', // Filter for which club to display
-      editingMode: 'measurements', // Toggle between 'measurements' and 'exercises'
+      editingMode: 'exercises', // Toggle between 'measurements' and 'exercises'
       selectedExercise: null, // Stores the selected exercise for detailed view
       currentExerciseIndex: 0, // Track the index of the selected exercise
       showVideo: false, // Controls the display of the video modal
