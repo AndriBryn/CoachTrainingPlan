@@ -150,11 +150,11 @@
                 font-size: x-large;
               "
             >
-              <div style="width: 250px; margin-left: 105px">Exercise</div>
-              <div style="width: 15px"></div>
-              <div style="width: 250px">Ability</div>
-              <div style="width: 15px"></div>
-              <div style="width: 250px">Focus</div>
+              <div style="width: 300px; margin-left: 100px">Exercise</div>
+              <div style="width: 70px"></div>
+              <div style="width: 300px">Ability</div>
+              <div style="width: 70px"></div>
+              <div style="width: 300px">Focus</div>
               <div style="width: 220px">Other Info</div>
             </div>
 
@@ -198,43 +198,21 @@
                   <div style="width: 250px">{{ exercise.ability }}</div>
                   <div style="width: 15px">-</div>
                   <div style="width: 250px">{{ exercise.focus }}</div>
-
-                  <!-- Icons for video and image -->
-                  <div style="display: flex; justify-content: center; width: 60px">
-                    <!-- Video Icon -->
-                    <div class="tooltip">
-                      <img
-                        :src="exercise.video ? '/images/play.png' : '/images/play-grey.png'"
-                        :alt="exercise.video ? 'Has video' : 'No video'"
-                        class="icon"
-                      />
-                      <span class="tooltiptext">{{
-                        exercise.video ? 'Has video' : 'No video'
-                      }}</span>
+                  <div style="display: flex">
+                    <div class="image-container-2">
+                      <img :src="exercise.image" alt="Exercise Image" class="exercise-image-2" />
                     </div>
-                    <!-- Image Icon -->
-                    <div class="tooltip">
-                      <img
-                        :src="exercise.image ? '/images/camera.png' : '/images/camera-grey.png'"
-                        :alt="exercise.image ? 'Has image' : 'No image'"
-                        class="icon"
-                      />
-                      <span class="tooltiptext">{{
-                        exercise.image ? 'Has image' : 'No image'
-                      }}</span>
+                    <!-- More Info Button -->
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100%;
+                      "
+                    >
+                      <button @click="viewExerciseDetails(exercise)">More Info</button>
                     </div>
-                  </div>
-
-                  <!-- More Info Button -->
-                  <div
-                    style="
-                      display: flex;
-                      justify-content: center;
-                      align-items: center;
-                      height: 100%;
-                    "
-                  >
-                    <button @click="viewExerciseDetails(exercise)">More Info</button>
                   </div>
                 </div>
               </li>
@@ -261,59 +239,56 @@
         <button @click="clearExerciseSelection" class="back-button">Back to Edit Exercises</button>
 
         <!-- Add the indicators for "Has Video" and "Has Image" -->
-        <div class="indicators">
-          <!-- Video Indicator -->
-          <div class="tooltip">
-            <img
-              :src="selectedExercise.video ? '/images/play.png' : '/images/play-grey.png'"
-              :alt="selectedExercise.video ? 'Has video' : 'No video'"
-              class="icon"
-            />
-            <span class="tooltiptext">{{ selectedExercise.video ? 'Has video' : 'No video' }}</span>
+        <div style="justify-content: center; align-items: center">
+          <div class="indicators">
+            <div></div>
+            <!-- Add "Add Exercise" and "Remove Exercise" buttons styled like in Edit Exercises -->
+            <div class="tooltip">
+              <img
+                :src="
+                  !currentClub.exercises.includes(selectedExercise.exercise)
+                    ? '/images/checkmark-grey.png'
+                    : '/images/checkmark.png'
+                "
+                :alt="
+                  !currentClub.exercises.includes(selectedExercise.exercise)
+                    ? 'Add Exercise'
+                    : 'Remove Exercise'
+                "
+                class="icon"
+                @click="toggleExerciseSelection(currentClub, selectedExercise.exercise)"
+                style="cursor: pointer"
+              />
+              <span class="tooltiptext">
+                {{
+                  !currentClub.exercises.includes(selectedExercise.exercise)
+                    ? 'Add Exercise'
+                    : 'Remove Exercise'
+                }}
+              </span>
+            </div>
+            <div></div>
           </div>
 
-          <!-- Image Indicator -->
-          <div class="tooltip">
+          <!-- Display image if available -->
+          <div class="image-container" style="margin-top: 20px">
+            <img :src="selectedExercise.image" alt="Exercise Image" class="exercise-image" />
+            <!-- Show play button overlay if a video is available -->
             <img
-              :src="selectedExercise.image ? '/images/camera.png' : '/images/camera-grey.png'"
-              :alt="selectedExercise.image ? 'Has image' : 'No image'"
-              class="icon"
+              v-if="selectedExercise && selectedExercise.video"
+              src="/images/PlayButtonGreen.png"
+              alt="Play Button"
+              class="play-button"
+              @click="playVideo(selectedExercise)"
             />
-            <span class="tooltiptext">{{ selectedExercise.image ? 'Has image' : 'No image' }}</span>
           </div>
-        </div>
 
-        <!-- Display image if available -->
-        <div class="image-container" style="margin-top: 20px">
-          <img :src="selectedExercise.image" alt="Exercise Image" class="exercise-image" />
-          <!-- Show play button overlay if a video is available -->
-          <img
-            v-if="selectedExercise && selectedExercise.video"
-            src="/images/PlayButtonGreen.png"
-            alt="Play Button"
-            class="play-button"
-            @click="playVideo(selectedExercise)"
-          />
-        </div>
-
-        <h2>{{ selectedExercise.exercise }}</h2>
-        <p>
-          Ability: {{ selectedExercise.ability }} - Focus: {{ selectedExercise.focus }} -
-          {{ selectedExercise.sets || 'Sets: Not specified' }}
-        </p>
-        <p>Description: {{ selectedExercise.description }}</p>
-
-        <!-- Add "Add Exercise" and "Remove Exercise" buttons -->
-        <div class="exercise-toggle-buttons">
-          <button
-            v-if="!currentClub.exercises.includes(selectedExercise.exercise)"
-            @click="toggleExerciseSelection(currentClub, selectedExercise.exercise)"
-          >
-            Add Exercise
-          </button>
-          <button v-else @click="toggleExerciseSelection(currentClub, selectedExercise.exercise)">
-            Remove Exercise
-          </button>
+          <h2>{{ selectedExercise.exercise }}</h2>
+          <p>
+            Ability: {{ selectedExercise.ability }} - Focus: {{ selectedExercise.focus }} -
+            {{ selectedExercise.sets || 'Sets: Not specified' }}
+          </p>
+          <p>Description: {{ selectedExercise.description }}</p>
         </div>
 
         <!-- Modal for Vimeo Video -->
@@ -596,7 +571,7 @@ export default {
 <style scoped>
 select {
   text-align: center;
-  padding: 10px 20px;
+  padding: 10px 5px;
   font-size: 16px;
   cursor: pointer;
   background-color: #222232;
@@ -604,9 +579,7 @@ select {
   color: #79e098;
   border: 2px solid #79e098;
   border-radius: 5px;
-  width: 100%;
-  max-width: 200px; /* Adjust as necessary */
-  margin: 10px;
+  width: 220px;
 }
 
 option {
@@ -734,16 +707,33 @@ button {
 .image-container {
   position: relative;
   width: 100%; /* Takes up 100% of its parent container */
-  max-width: 600px; /* Set a maximum width for the image container */
+  max-width: 400px; /* Set a maximum width for the image container */
   margin: 0 auto; /* This centers the container horizontally */
   border-radius: 10px;
   text-align: center; /* Optional, to center the contents */
 }
 
+.image-container-2 {
+  position: relative;
+  width: 50px;
+  height: 100%; /* Takes up 100% of its parent container */
+  max-height: 20px;
+  margin-right: 10px;
+  margin-top: -7px;
+  border-radius: 5px;
+  text-align: center; /* Optional, to center the contents */
+}
+
 .exercise-image {
   width: 100%;
-  height: auto;
+  max-height: 100%;
   border-radius: 10px;
+}
+
+.exercise-image-2 {
+  width: 100%;
+  max-height: 100%;
+  border-radius: 5px;
 }
 
 .play-button {
@@ -825,5 +815,13 @@ iframe {
   text-align: center;
   align-items: center;
   align-content: center;
+}
+.indicators {
+  display: flex;
+  justify-content: space-between;
+  text-align: center;
+  align-items: center;
+  margin-top: 10px;
+  font-size: large;
 }
 </style>
