@@ -95,10 +95,21 @@
             </div>
           </div>
 
+          <div v-if="isLoading">
+            <p>Loading measurements...</p>
+          </div>
+
           <!-- Display measurements if the user selected Edit Measurements -->
-          <div v-if="editingMode === 'measurements'">
+          <div
+            v-if="
+              !isLoading &&
+              editingMode === 'measurements' &&
+              filteredClubs.length &&
+              measurements.length
+            "
+          >
             <ul>
-              <li v-for="(measurement, i) in filteredMeasurements" :key="i">
+              <li v-for="(measurement, i) in club.measurements" :key="i">
                 <div
                   style="
                     display: flex;
@@ -114,34 +125,26 @@
                     <div class="tooltip">
                       <img
                         :src="
-                          club.measurements.includes(measurement.name)
+                          measurement.selected
                             ? '/images/checkmark.png'
                             : '/images/checkmark-grey.png'
                         "
                         @click="toggleMeasurementSelection(club, measurement.name)"
                         class="icon"
                         style="cursor: pointer; margin-right: 10px"
-                        :alt="
-                          club.measurements.includes(measurement.name)
-                            ? 'Remove Measurement'
-                            : 'Add Measurement'
-                        "
+                        :alt="measurement.selected ? 'Remove Measurement' : 'Add Measurement'"
                       />
                       <span class="tooltiptext">{{
-                        club.measurements.includes(measurement.name)
-                          ? 'Remove Measurement'
-                          : 'Add Measurement'
+                        measurement.selected ? 'Remove Measurement' : 'Add Measurement'
                       }}</span>
                     </div>
-                    <div>
-                      {{ measurement.exercise }}
-                    </div>
+                    <div>{{ measurement.title }}</div>
                   </div>
-                  <div v-if="!club.measurements.includes(measurement.name)"></div>
+                  <!-- Input for benchmark, only visible if measurement is selected -->
                   <input
                     type="number"
-                    v-if="club.measurements.includes(measurement.name)"
-                    v-model.number="club.benchmarks[club.measurements.indexOf(measurement.name)]"
+                    v-if="measurement.selected"
+                    v-model.number="measurement.benchmark"
                     placeholder="Enter Benchmark"
                     style="margin-right: 30px"
                   />
@@ -387,12 +390,12 @@ export default {
       selectedExercise: null, // Stores the selected exercise for detailed view
       currentExerciseIndex: 0, // Track the index of the selected exercise
       showVideo: false, // Controls the display of the video modal
-      modifiedVideoUrl: '' // Stores the modified video URL for autoplay
+      modifiedVideoUrl: '', // Stores the modified video URL for autoplay
+      isLoading: true // Single loading state
     }
   },
   mounted() {
-    this.fetchClubData() // Fetch the initial club data
-    this.fetchMeasurements() // Fetch the measurements
+    this.fetchAllData()
     this.fetchExercises() // Fetch the exercises
   },
   computed: {
@@ -456,6 +459,21 @@ export default {
     }
   },
   methods: {
+    async fetchAllData() {
+      try {
+        this.isLoading = true // Set loading to true while fetching
+
+        // Fetch measurements first before fetching club data
+        await this.fetchMeasurements()
+
+        // Once measurements are fetched, fetch the club data
+        await this.fetchClubData()
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      } finally {
+        this.isLoading = false // Set loading to false when data fetching is complete
+      }
+    },
     async fetchClubData() {
       try {
         const response = await fetch('/.netlify/functions/get-csv-file')
@@ -466,13 +484,41 @@ export default {
         const rows = csvContent.split('\n').slice(1) // Skip header row
         this.clubsData = rows.map((row) => {
           const [clubName, measurements, benchmarks, exercises] = row.split(';')
+
+          // Convert measurements and benchmarks to arrays
+          const measurementsArray = measurements ? measurements.split(',') : []
+          const benchmarksArray = benchmarks ? benchmarks.split(',').map(Number) : []
+
+          // Map measurements with selected status, benchmarks, and title from global measurements
+          const mappedMeasurements = this.measurements.map((measurement) => {
+            const existingMeasurementIndex = measurementsArray.indexOf(measurement.name)
+            const isSelected = existingMeasurementIndex !== -1
+            const benchmark = isSelected ? benchmarksArray[existingMeasurementIndex] : 0
+
+            // Find the corresponding exercise from global measurements
+            const correspondingMeasurement = this.measurements.find(
+              (m) => m.name === measurement.name
+            )
+            const title = correspondingMeasurement
+              ? correspondingMeasurement.exercise
+              : 'Unknown Title'
+
+            return {
+              name: measurement.name,
+              selected: isSelected,
+              benchmark: benchmark || 0,
+              title: title // Assign the title (exercise) to this measurement
+            }
+          })
+
           return {
             clubName,
-            measurements: measurements ? measurements.split(',') : [],
-            benchmarks: benchmarks ? benchmarks.split(',').map(Number) : [],
+            measurements: mappedMeasurements, // Attach measurements with their selected, benchmark, and title
             exercises: exercises ? exercises.split(',') : []
           }
         })
+
+        console.log(this.clubsData)
 
         // Set the first club as selected after the data is fetched
         if (this.clubsData.length > 0) {
@@ -487,6 +533,7 @@ export default {
         const response = await fetch('/.netlify/functions/get-measurements')
         const result = await response.json()
         this.measurements = result.measurements // Use measurements from backend
+        console.log(this.measurements)
       } catch (error) {
         console.error('Failed to fetch measurements:', error)
       }
@@ -520,10 +567,19 @@ export default {
     generateCSV() {
       const header = 'clubs;measurements;benchmark;exercises'
       const rows = this.clubsData.map((club) => {
-        const measurements = club.measurements.join(',')
-        const benchmarks = club.benchmarks.join(',')
+        const selectedMeasurements = club.measurements
+          .filter((m) => m.selected)
+          .map((m) => m.name)
+          .join(',')
+
+        const selectedBenchmarks = club.measurements
+          .filter((m) => m.selected)
+          .map((m) => m.benchmark)
+          .join(',')
+
         const exercises = club.exercises.join(',')
-        return `${club.clubName};${measurements};${benchmarks};${exercises}`
+
+        return `${club.clubName};${selectedMeasurements};${selectedBenchmarks};${exercises}`
       })
       return [header, ...rows].join('\n') // Combine header and rows into CSV format
     },
@@ -561,22 +617,11 @@ export default {
       this.selectedExercise = null
     },
     toggleMeasurementSelection(club, measurementName) {
-      // Check if club.measurements is defined
-      if (!club.measurements) {
-        this.$set(club, 'measurements', [])
-      }
-      const index = club.measurements.indexOf(measurementName)
-      if (index === -1) {
-        // Add measurement and ensure benchmarks is updated reactively
-        club.measurements.push(measurementName)
-        if (!club.benchmarks) {
-          this.$set(club, 'benchmarks', [])
-        }
-        club.benchmarks.push(0)
-      } else {
-        // Remove measurement and the corresponding benchmark
-        club.measurements.splice(index, 1)
-        club.benchmarks.splice(index, 1)
+      const measurement = club.measurements.find((m) => m.name === measurementName)
+
+      // Toggle the selected status of the measurement
+      if (measurement) {
+        measurement.selected = !measurement.selected
       }
     },
 
