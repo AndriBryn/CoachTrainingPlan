@@ -23,19 +23,22 @@
               @click="editingMode = 'measurements'"
               :class="{ active: editingMode === 'measurements' }"
             >
-              Edit Measurements
+              Set Measurement Benchmarks
             </button>
             <button
               @click="editingMode = 'exercises'"
               :class="{ active: editingMode === 'exercises' }"
             >
-              Edit Exercises
+              Select Exercises
             </button>
           </div>
 
           <!-- Filter options for measurements -->
-          <div v-if="measurements.length && editingMode === 'measurements'">
-            <h3>Filter Measurements</h3>
+          <div
+            v-if="measurements.length && editingMode === 'measurements'"
+            style="background-color: #2f2f3e; border-radius: 5px"
+          >
+            <h3 style="font-size: xx-large; font-weight: 600">Filter Measurements</h3>
             <label>
               <input type="radio" value="all" v-model="filterType" />
               All
@@ -55,7 +58,7 @@
             v-if="exercises.length && editingMode === 'exercises'"
             style="background-color: #2f2f3e; border-radius: 5px"
           >
-            <h3 style="font-size: x-large; font-weight: bold">Exercise Filters</h3>
+            <h3 style="font-size: x-large; font-weight: 600">Exercise Filters</h3>
             <div
               style="
                 display: flex;
@@ -96,41 +99,53 @@
           <div v-if="editingMode === 'measurements'">
             <ul>
               <li v-for="(measurement, i) in filteredMeasurements" :key="i">
-                <div style="display: flex; align-items: center">
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    text-align: center;
+                    margin: 0;
+                    font-size: x-large;
+                  "
+                >
                   <!-- Conditional Checkmark Icon with Tooltip -->
-                  <div class="tooltip">
-                    <img
-                      :src="
-                        club.measurements.includes(measurement.name)
-                          ? '/images/checkmark.png'
-                          : '/images/checkmark-grey.png'
-                      "
-                      @click="toggleMeasurementSelection(club, measurement.name)"
-                      class="icon"
-                      style="cursor: pointer; margin-right: 10px"
-                      :alt="
+                  <div style="display: flex; justify-content: center; align-items: center">
+                    <div class="tooltip">
+                      <img
+                        :src="
+                          club.measurements.includes(measurement.name)
+                            ? '/images/checkmark.png'
+                            : '/images/checkmark-grey.png'
+                        "
+                        @click="toggleMeasurementSelection(club, measurement.name)"
+                        class="icon"
+                        style="cursor: pointer; margin-right: 10px"
+                        :alt="
+                          club.measurements.includes(measurement.name)
+                            ? 'Remove Measurement'
+                            : 'Add Measurement'
+                        "
+                      />
+                      <span class="tooltiptext">{{
                         club.measurements.includes(measurement.name)
                           ? 'Remove Measurement'
                           : 'Add Measurement'
-                      "
-                    />
-                    <span class="tooltiptext">{{
-                      club.measurements.includes(measurement.name)
-                        ? 'Remove Measurement'
-                        : 'Add Measurement'
-                    }}</span>
+                      }}</span>
+                    </div>
+                    <div>
+                      {{ measurement.exercise }}
+                    </div>
                   </div>
-                  <label>
-                    {{ measurement.exercise }}
-                    ({{ measurement.withball ? 'With Ball' : 'Without Ball' }})
-                  </label>
+                  <div v-if="!club.measurements.includes(measurement.name)"></div>
+                  <input
+                    type="number"
+                    v-if="club.measurements.includes(measurement.name)"
+                    v-model.number="club.benchmarks[club.measurements.indexOf(measurement.name)]"
+                    placeholder="Enter Benchmark"
+                    style="margin-right: 30px"
+                  />
                 </div>
-                <input
-                  type="number"
-                  v-if="club.measurements.includes(measurement.name)"
-                  v-model.number="club.benchmarks[club.measurements.indexOf(measurement.name)]"
-                  placeholder="Enter Benchmark"
-                />
               </li>
             </ul>
           </div>
@@ -144,18 +159,17 @@
                 justify-content: space-between;
                 text-align: center;
                 align-items: center;
-                font-weight: bold;
                 padding-bottom: 10px;
                 margin-bottom: 10px;
                 font-size: x-large;
               "
             >
-              <div style="width: 300px; margin-left: 95px">Exercise</div>
+              <div style="width: 300px; margin-left: 95px; font-weight: 600">Exercise</div>
               <div style="width: 30px"></div>
-              <div style="width: 300px">Ability</div>
+              <div style="width: 300px; font-weight: 600">Ability</div>
               <div style="width: 30px"></div>
-              <div style="width: 300px">Focus</div>
-              <div style="width: 220px">Other Info</div>
+              <div style="width: 300px; font-weight: 600">Focus</div>
+              <div style="width: 220px; font-weight: 600">Other Info</div>
             </div>
 
             <ul>
@@ -167,7 +181,7 @@
                     text-align: center;
                     align-items: center;
                     margin-bottom: 0px;
-                    font-size: large;
+                    font-size: x-large;
                   "
                 >
                   <!-- Conditional Checkmark Icon with Tooltip for Exercises -->
@@ -680,7 +694,18 @@ li {
   border-color: #79e098;
 }
 input[type='number'] {
-  margin-left: 10px;
+  text-align: center;
+  background-color: #222232;
+  color: #79e098;
+  border: solid #79e098;
+  font-size: x-large;
+  width: 80px;
+  border-radius: 5px;
+}
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 button {
   padding: 10px 20px;
@@ -697,6 +722,7 @@ button {
   height: 50px;
 }
 .tooltip {
+  font-size: medium;
   width: 60px;
   position: relative;
   display: inline-flex; /* Use flexbox to align contents vertically */
