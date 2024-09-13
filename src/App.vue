@@ -39,18 +39,20 @@
             style="background-color: #2f2f3e; border-radius: 5px"
           >
             <h3 style="font-size: xx-large; font-weight: 600">Filter Measurements</h3>
-            <label>
-              <input type="radio" value="all" v-model="filterType" />
-              All
-            </label>
-            <label>
-              <input type="radio" value="withBall" v-model="filterType" />
-              With Ball
-            </label>
-            <label>
-              <input type="radio" value="withoutBall" v-model="filterType" />
-              Without Ball
-            </label>
+            <div style="padding: 10px">
+              <label>
+                <input type="radio" value="all" v-model="filterType" />
+                All
+              </label>
+              <label>
+                <input type="radio" value="withBall" v-model="filterType" />
+                With Ball
+              </label>
+              <label>
+                <input type="radio" value="withoutBall" v-model="filterType" />
+                Without Ball
+              </label>
+            </div>
           </div>
 
           <!-- Filter options for exercises -->
@@ -95,10 +97,6 @@
             </div>
           </div>
 
-          <div v-if="isLoading">
-            <p>Loading measurements...</p>
-          </div>
-
           <!-- Display measurements if the user selected Edit Measurements -->
           <div
             v-if="
@@ -140,14 +138,48 @@
                     </div>
                     <div>{{ measurement.title }}</div>
                   </div>
-                  <!-- Input for benchmark, only visible if measurement is selected -->
-                  <input
-                    type="number"
-                    v-if="measurement.selected"
-                    v-model.number="measurement.benchmark"
-                    placeholder="Enter Benchmark"
-                    style="margin-right: 30px"
-                  />
+
+                  <!-- Button to edit all age/gender benchmarks -->
+                  <div v-if="measurement.selected">
+                    <button @click="openBenchmarkEditor(measurement)">Edit Benchmarks</button>
+                  </div>
+                </div>
+                <!-- Table for editing benchmarks for all ages and genders -->
+                <div
+                  v-if="selectedMeasurement === measurement && showBenchmarkEditor"
+                  style="background-color: #2f2f3e"
+                >
+                  <h3>Edit Benchmarks for {{ selectedMeasurement.title }}</h3>
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: center;
+                      align-items: center;
+                      padding: 10px;
+                    "
+                  >
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Gender</th>
+                          <th v-for="age in ageOptions" :key="age">{{ age }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="gender in genderOptions" :key="gender">
+                          <td>{{ gender }}</td>
+                          <td v-for="age in ageOptions" :key="age">
+                            <input
+                              type="number"
+                              v-model.number="selectedMeasurement.benchmark[age][gender]"
+                              :placeholder="'Enter benchmark for ' + age + '-' + gender"
+                            />
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <button @click="closeBenchmarkEditor">Close</button>
                 </div>
               </li>
             </ul>
@@ -391,7 +423,13 @@ export default {
       currentExerciseIndex: 0, // Track the index of the selected exercise
       showVideo: false, // Controls the display of the video modal
       modifiedVideoUrl: '', // Stores the modified video URL for autoplay
-      isLoading: true // Single loading state
+      isLoading: true, // Single loading state
+      selectedAge: '9', // Default age
+      selectedGender: 'm', // Default gender
+      ageOptions: ['9', '10', '11', '12', '13', '14', '15', '16', '17', '18'], // Age options
+      genderOptions: ['m', 'f'], // Gender options
+      showBenchmarkEditor: false, // Controls the visibility of the benchmark editor
+      selectedMeasurement: null // Stores the measurement currently being edited
     }
   },
   mounted() {
@@ -487,34 +525,49 @@ export default {
 
           // Convert measurements and benchmarks to arrays
           const measurementsArray = measurements ? measurements.split(',') : []
-          const benchmarksArray = benchmarks ? benchmarks.split(',').map(Number) : []
+          const benchmarksArray = benchmarks ? benchmarks.split(',') : []
 
-          // Map measurements with selected status, benchmarks, and title from global measurements
+          // Map measurements with selected status, benchmarks for each age-gender group, and map exercise to title
           const mappedMeasurements = this.measurements.map((measurement) => {
             const existingMeasurementIndex = measurementsArray.indexOf(measurement.name)
             const isSelected = existingMeasurementIndex !== -1
-            const benchmark = isSelected ? benchmarksArray[existingMeasurementIndex] : 0
 
-            // Find the corresponding exercise from global measurements
-            const correspondingMeasurement = this.measurements.find(
-              (m) => m.name === measurement.name
-            )
-            const title = correspondingMeasurement
-              ? correspondingMeasurement.exercise
-              : 'Unknown Title'
+            // Initialize benchmark object
+            let benchmark = {}
+
+            // If the measurement is selected and there are existing benchmarks
+            if (isSelected && benchmarksArray[existingMeasurementIndex]) {
+              // Split benchmark by "/" to get individual age-gender-benchmark groups
+              const benchmarkGroups = benchmarksArray[existingMeasurementIndex].split('/')
+              benchmarkGroups.forEach((group) => {
+                const [age, gender, time] = group.split('-')
+                if (!benchmark[age]) benchmark[age] = {}
+                benchmark[age][gender] = parseFloat(time) // Retain existing benchmark
+              })
+            }
+
+            // Ensure that every age-gender pair has a value, defaulting to 0 if missing
+            this.ageOptions.forEach((age) => {
+              if (!benchmark[age]) benchmark[age] = {}
+              this.genderOptions.forEach((gender) => {
+                if (!benchmark[age][gender]) {
+                  benchmark[age][gender] = 0 // Set to 0 if no benchmark exists
+                }
+              })
+            })
 
             return {
               name: measurement.name,
               selected: isSelected,
-              benchmark: benchmark || 0,
-              title: title // Assign the title (exercise) to this measurement
+              benchmark: benchmark || {}, // Store benchmarks for each age and gender
+              title: measurement.exercise || 'Unknown Title' // Map the global `exercise` to `title`
             }
           })
 
           return {
             clubName,
-            measurements: mappedMeasurements, // Attach measurements with their selected, benchmark, and title
-            exercises: exercises ? exercises.split(',') : []
+            measurements: mappedMeasurements, // Attach measurements with selected status, benchmarks, and title
+            exercises: exercises ? exercises.split(',') : [] // Convert exercises to an array
           }
         })
 
@@ -566,21 +619,39 @@ export default {
 
     generateCSV() {
       const header = 'clubs;measurements;benchmark;exercises'
+
       const rows = this.clubsData.map((club) => {
+        // Get selected measurements
         const selectedMeasurements = club.measurements
           .filter((m) => m.selected)
           .map((m) => m.name)
           .join(',')
 
+        // Get selected benchmarks formatted as 'age-gender-benchmark'
         const selectedBenchmarks = club.measurements
           .filter((m) => m.selected)
-          .map((m) => m.benchmark)
+          .map((m) => {
+            // For each selected measurement, get the benchmarks for all ages and genders
+            const benchmarks = []
+            Object.keys(m.benchmark).forEach((age) => {
+              Object.keys(m.benchmark[age]).forEach((gender) => {
+                const time = m.benchmark[age][gender]
+                if (time !== undefined && !isNaN(time)) {
+                  // Only add valid benchmarks (non-undefined and non-NaN)
+                  benchmarks.push(`${age}-${gender}-${time}`)
+                }
+              })
+            })
+            return benchmarks.length > 0 ? benchmarks.join('/') : '' // Ensure it doesn't return undefined or NaN
+          })
           .join(',')
 
+        // Get selected exercises
         const exercises = club.exercises.join(',')
 
         return `${club.clubName};${selectedMeasurements};${selectedBenchmarks};${exercises}`
       })
+
       return [header, ...rows].join('\n') // Combine header and rows into CSV format
     },
 
@@ -624,7 +695,10 @@ export default {
         measurement.selected = !measurement.selected
       }
     },
-
+    onAgeOrGenderChange() {
+      // Handle changes to age or gender here
+      console.log(`Selected age: ${this.selectedAge}, gender: ${this.selectedGender}`)
+    },
     // Toggle selection for exercises
     toggleExerciseSelection(club, exerciseName) {
       // Check if club.exercises is defined
@@ -676,6 +750,37 @@ export default {
         }
       }
       return icons
+    },
+    getBenchmarkValue(measurement) {
+      // Check if the benchmark for the selected age and gender exists
+      const age = this.selectedAge
+      const gender = this.selectedGender
+      if (measurement.benchmark[age] && measurement.benchmark[age][gender]) {
+        return measurement.benchmark[age][gender]
+      }
+      return 0
+    },
+
+    updateBenchmark(measurement, value) {
+      const selectedAge = this.selectedAge // Ensure selectedAge is available
+      const selectedGender = this.selectedGender // Ensure selectedGender is available
+
+      // Ensure the benchmark object exists for the selected age and gender
+      if (!measurement.benchmark[selectedAge]) {
+        measurement.benchmark[selectedAge] = {} // Vue 3 handles reactivity automatically
+      }
+
+      measurement.benchmark[selectedAge][selectedGender] = parseFloat(value)
+    },
+    openBenchmarkEditor(measurement) {
+      this.selectedMeasurement = measurement // Set the measurement to be edited
+      this.showBenchmarkEditor = true // Show the benchmark editor
+    },
+
+    // Method to close the benchmark editor without saving
+    closeBenchmarkEditor() {
+      this.showBenchmarkEditor = false // Hide the editor
+      this.selectedMeasurement = null // Clear the selected measurement
     }
   }
 }
