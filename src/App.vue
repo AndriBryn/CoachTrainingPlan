@@ -41,7 +41,7 @@
             <h3 style="font-size: xx-large; font-weight: 600">Filter Measurements</h3>
             <div style="padding: 10px">
               <select v-model="selectedMeasurementAbility">
-                <option value="all">All Abilities</option>
+                <option value="all">All skills</option>
                 <option
                   v-for="ability in uniqueMeasurementAbilities"
                   :key="ability"
@@ -522,7 +522,7 @@ export default {
         const result = await response.json()
         const csvContent = result.csvContent
 
-        // Parse the club data
+        // Parse the club data by splitting CSV content into rows
         const rows = csvContent.split('\n').slice(1) // Skip header row
         this.clubsData = rows.map((row) => {
           const [clubName, measurements, benchmarks, exercises] = row.split(';')
@@ -560,17 +560,23 @@ export default {
               })
             })
 
+            // Add ability mapping from measurements fetched
+            const measurementAbility = this.measurements.find(
+              (m) => m.name === measurement.name
+            )?.ability
+
             return {
               name: measurement.name,
               selected: isSelected,
               benchmark: benchmark || {}, // Store benchmarks for each age and gender
-              title: measurement.exercise || 'Unknown Title' // Map the global `exercise` to `title`
+              title: measurement.exercise || 'Unknown Title', // Map the global `exercise` to `title`
+              ability: measurementAbility || '' // Assign the ability to the measurement
             }
           })
 
           return {
             clubName,
-            measurements: mappedMeasurements, // Attach measurements with selected status, benchmarks, and title
+            measurements: mappedMeasurements, // Attach measurements with selected status, benchmarks, and ability
             exercises: exercises ? exercises.split(',') : [] // Convert exercises to an array
           }
         })
