@@ -75,9 +75,9 @@
             >
               <!-- Ability Filter Dropdown -->
               <div style="width: 50%">
-                <label for="abilityFilter">Filter by Ability: </label>
+                <label for="abilityFilter">Filter by Skill: </label>
                 <select id="abilityFilter" v-model="selectedAbility">
-                  <option value="all">All Abilities</option>
+                  <option value="all">All Skills</option>
                   <option v-for="ability in uniqueAbilities" :key="ability" :value="ability">
                     {{ ability }}
                   </option>
@@ -201,7 +201,7 @@
             >
               <div style="width: 300px; margin-left: 95px; font-weight: 600">Exercise</div>
               <div style="width: 30px"></div>
-              <div style="width: 300px; font-weight: 600">Ability</div>
+              <div style="width: 300px; font-weight: 600">Skill</div>
               <div style="width: 30px"></div>
               <div style="width: 300px; font-weight: 600">Focus</div>
               <div style="width: 220px; font-weight: 600">Other Info</div>
