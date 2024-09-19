@@ -134,7 +134,10 @@
                         measurement.selected ? 'Remove Measurement' : 'Add Measurement'
                       }}</span>
                     </div>
-                    <div>{{ measurement.title }}</div>
+                    <div style="width: 500px; text-align: left">{{ measurement.title }}</div>
+                    <div style="position: absolute; left: 50%; transform: translateX(-50%)">
+                      {{ measurement.ability }}
+                    </div>
                   </div>
 
                   <!-- Button to edit all age/gender benchmarks -->
@@ -1060,7 +1063,6 @@ iframe {
   position: absolute;
   bottom: 10vh;
   left: 50%;
-  transform: translateX(-50%);
   width: 50%;
   display: flex;
   justify-content: center;
