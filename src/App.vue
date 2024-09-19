@@ -38,19 +38,15 @@
             v-if="measurements.length && editingMode === 'measurements'"
             style="background-color: #2f2f3e; border-radius: 5px"
           >
-            <h3 style="font-size: xx-large; font-weight: 600">Filter Measurements</h3>
+            <h3 style="font-size: xx-large; font-weight: 600">Filter Measurements by Skill</h3>
             <div style="padding: 10px">
               <label>
-                <input type="radio" value="all" v-model="filterType" />
+                <input type="radio" value="all" v-model="selectedSkill" />
                 All
               </label>
-              <label>
-                <input type="radio" value="withBall" v-model="filterType" />
-                With Ball
-              </label>
-              <label>
-                <input type="radio" value="withoutBall" v-model="filterType" />
-                Without Ball
+              <label v-for="skill in uniqueSkills" :key="skill">
+                <input type="radio" :value="skill" v-model="selectedSkill" />
+                {{ skill }}
               </label>
             </div>
           </div>
@@ -414,7 +410,7 @@ export default {
       measurements: [], // List of all measurements from get-measurements
       exercises: [], // List of all exercises from get-exercises
       clubsData: [], // List of clubs and their data from get-csv-file
-      filterType: 'all', // Filter for withBall or withoutBall or all
+      selectedSkill: 'all', // New data property to track selected skill
       selectedAbility: 'all', // Filter for exercises by ability
       selectedFocus: 'all', // Filter for exercises by focus
       selectedClub: 'all', // Filter for which club to display
@@ -446,6 +442,9 @@ export default {
       }
       return ''
     },
+    uniqueSkills() {
+      return [...new Set(this.measurements.map((m) => m.ability))]
+    },
 
     // Get the name of the next exercise
     nextExerciseName() {
@@ -457,14 +456,11 @@ export default {
     },
     // Filter measurements based on the selected filter type
     filteredMeasurements() {
-      if (this.filterType === 'withBall') {
-        return this.measurements.filter((m) => m.withball)
-      } else if (this.filterType === 'withoutBall') {
-        return this.measurements.filter((m) => !m.withball)
+      if (this.selectedSkill === 'all') {
+        return this.measurements
       }
-      return this.measurements
+      return this.measurements.filter((m) => m.ability === this.selectedSkill)
     },
-
     // Unique abilities for the dropdown filter
     uniqueAbilities() {
       return [...new Set(this.exercises.map((exercise) => exercise.ability))].filter(Boolean)

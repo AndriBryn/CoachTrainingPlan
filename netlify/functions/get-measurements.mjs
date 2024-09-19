@@ -28,8 +28,8 @@ export const handler = async function (event, context) {
     // Parse the CSV into an array of objects
     const rows = csvContent.split('\n').slice(1) // Remove the header row
     const measurements = rows.map((row) => {
-      const [exercise, name, withball] = row.split(';') // Adjust if delimiter is different
-      return { exercise, name, withball: withball === 'true' } // Ensure withball is a boolean
+      const [exercise, name, withball, ability] = row.split(';') // Assuming the 'ability' is the fourth column
+      return { exercise, name, ability: ability.trim() } // Add ability to the measurement object
     })
 
     return {
