@@ -38,16 +38,18 @@
             v-if="measurements.length && editingMode === 'measurements'"
             style="background-color: #2f2f3e; border-radius: 5px"
           >
-            <h3 style="font-size: xx-large; font-weight: 600">Filter Measurements by Skill</h3>
+            <h3 style="font-size: xx-large; font-weight: 600">Filter Measurements</h3>
             <div style="padding: 10px">
-              <label>
-                <input type="radio" value="all" v-model="selectedSkill" />
-                All
-              </label>
-              <label v-for="skill in uniqueSkills" :key="skill">
-                <input type="radio" :value="skill" v-model="selectedSkill" />
-                {{ skill }}
-              </label>
+              <select v-model="selectedMeasurementAbility">
+                <option value="all">All Abilities</option>
+                <option
+                  v-for="ability in uniqueMeasurementAbilities"
+                  :key="ability"
+                  :value="ability"
+                >
+                  {{ ability }}
+                </option>
+              </select>
             </div>
           </div>
 
@@ -103,7 +105,7 @@
             "
           >
             <ul>
-              <li v-for="(measurement, i) in filteredMeasurements" :key="i">
+              <li v-for="(measurement, i) in club.measurements" :key="i">
                 <div
                   style="
                     display: flex;
@@ -410,7 +412,7 @@ export default {
       measurements: [], // List of all measurements from get-measurements
       exercises: [], // List of all exercises from get-exercises
       clubsData: [], // List of clubs and their data from get-csv-file
-      selectedSkill: 'all', // New data property to track selected skill
+      filterType: 'all', // Filter for withBall or withoutBall or all
       selectedAbility: 'all', // Filter for exercises by ability
       selectedFocus: 'all', // Filter for exercises by focus
       selectedClub: 'all', // Filter for which club to display
@@ -425,7 +427,8 @@ export default {
       ageOptions: ['9', '10', '11', '12', '13', '14', '15', '16', '17', '18'], // Age options
       genderOptions: ['m', 'f'], // Gender options
       showBenchmarkEditor: false, // Controls the visibility of the benchmark editor
-      selectedMeasurement: null // Stores the measurement currently being edited
+      selectedMeasurement: null, // Stores the measurement currently being edited
+      selectedMeasurementAbility: 'all' // Default to 'all' to show all abilities initially
     }
   },
   mounted() {
@@ -442,9 +445,6 @@ export default {
       }
       return ''
     },
-    uniqueSkills() {
-      return [...new Set(this.measurements.map((m) => m.ability))]
-    },
 
     // Get the name of the next exercise
     nextExerciseName() {
@@ -454,17 +454,21 @@ export default {
       }
       return ''
     },
-    // Filter measurements based on the selected skill
+    // Filter measurements based on the selected filter type
     filteredMeasurements() {
-      if (this.selectedSkill === 'all') {
-        return this.measurements
+      let filtered = this.measurements
+
+      // Filter by selected ability if it's not 'all'
+      if (this.selectedMeasurementAbility !== 'all') {
+        filtered = filtered.filter((m) => m.ability === this.selectedMeasurementAbility)
       }
-      // Filter measurements based on the selected skill
-      const filtered = this.measurements.filter((m) => m.ability === this.selectedSkill)
-      console.log('Selected Skill:', this.selectedSkill) // Debug output
-      console.log('Filtered Measurements:', filtered) // Debug output
+
       return filtered
     },
+    uniqueMeasurementAbilities() {
+      return [...new Set(this.measurements.map((m) => m.ability))].filter(Boolean)
+    },
+
     // Unique abilities for the dropdown filter
     uniqueAbilities() {
       return [...new Set(this.exercises.map((exercise) => exercise.ability))].filter(Boolean)
