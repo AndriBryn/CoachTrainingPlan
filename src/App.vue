@@ -103,7 +103,7 @@
             "
           >
             <ul>
-              <li v-for="(measurement, i) in club.measurements" :key="i">
+              <li v-for="(measurement, i) in filteredMeasurements" :key="i">
                 <div
                   style="
                     display: flex;
@@ -459,6 +459,7 @@ export default {
       if (this.selectedSkill === 'all') {
         return this.measurements
       }
+      // Filter measurements based on the selected skill
       const filtered = this.measurements.filter((m) => m.ability === this.selectedSkill)
       console.log('Selected Skill:', this.selectedSkill) // Debug output
       console.log('Filtered Measurements:', filtered) // Debug output
