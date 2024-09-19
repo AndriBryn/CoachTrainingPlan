@@ -454,12 +454,15 @@ export default {
       }
       return ''
     },
-    // Filter measurements based on the selected filter type
+    // Filter measurements based on the selected skill
     filteredMeasurements() {
       if (this.selectedSkill === 'all') {
         return this.measurements
       }
-      return this.measurements.filter((m) => m.ability === this.selectedSkill)
+      const filtered = this.measurements.filter((m) => m.ability === this.selectedSkill)
+      console.log('Selected Skill:', this.selectedSkill) // Debug output
+      console.log('Filtered Measurements:', filtered) // Debug output
+      return filtered
     },
     // Unique abilities for the dropdown filter
     uniqueAbilities() {
