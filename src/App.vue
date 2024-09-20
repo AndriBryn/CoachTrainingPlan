@@ -105,7 +105,7 @@
             "
           >
             <ul>
-              <li v-for="(measurement, i) in club.measurements" :key="i">
+              <li v-for="(measurement, i) in filteredClubMeasurements(club.measurements)" :key="i">
                 <div
                   style="
                     display: flex;
@@ -794,6 +794,14 @@ export default {
     closeBenchmarkEditor() {
       this.showBenchmarkEditor = false // Hide the editor
       this.selectedMeasurement = null // Clear the selected measurement
+    },
+    filteredClubMeasurements(measurements) {
+      if (this.selectedMeasurementAbility === 'all') {
+        return measurements
+      }
+      return measurements.filter(
+        (measurement) => measurement.ability === this.selectedMeasurementAbility
+      )
     }
   }
 }
