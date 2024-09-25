@@ -1,19 +1,23 @@
 <template>
   <div class="page">
+    <!-- Password input section -->
+    <div v-if="!selectedClub || passwordError">
+      <h3>Enter Club Password</h3>
+      <input
+        type="password"
+        v-model="enteredPassword"
+        placeholder="Enter password"
+        @keyup.enter="validatePassword"
+      />
+      <button @click="validatePassword">Submit</button>
+      <p v-if="passwordError" style="color: red">{{ passwordError }}</p>
+    </div>
     <!-- Display club selection, filters, and content only if no exercise is selected -->
-    <div v-if="!selectedExercise">
-      <!-- Filter to select which club's data to show -->
-      <div v-if="clubsData.length">
-        <h3>Select Club</h3>
-        <select v-model="selectedClub">
-          <option v-for="(club, index) in clubsData" :key="index" :value="club.clubName">
-            {{ club.clubName }}
-          </option>
-        </select>
-      </div>
-
+    <div v-if="!selectedExercise && selectedClub">
       <!-- Display filtered clubs, measurements, and exercises -->
       <div v-if="filteredClubs.length && measurements.length && exercises.length">
+        <!-- Button to submit the updated benchmarks and exercises -->
+        <button @click="updateCSV">Save Changes</button>
         <div v-for="(club, index) in filteredClubs" :key="index" class="club">
           <h2>{{ club.clubName }}</h2>
 
@@ -288,9 +292,6 @@
             </ul>
           </div>
         </div>
-
-        <!-- Button to submit the updated benchmarks and exercises -->
-        <button @click="updateCSV">Update CSV</button>
       </div>
     </div>
 
@@ -418,7 +419,7 @@ export default {
       filterType: 'all', // Filter for withBall or withoutBall or all
       selectedAbility: 'all', // Filter for exercises by ability
       selectedFocus: 'all', // Filter for exercises by focus
-      selectedClub: 'all', // Filter for which club to display
+      selectedClub: null, // Filter for which club to display
       editingMode: 'exercises', // Toggle between 'measurements' and 'exercises'
       selectedExercise: null, // Stores the selected exercise for detailed view
       currentExerciseIndex: 0, // Track the index of the selected exercise
@@ -431,7 +432,9 @@ export default {
       genderOptions: ['m', 'f'], // Gender options
       showBenchmarkEditor: false, // Controls the visibility of the benchmark editor
       selectedMeasurement: null, // Stores the measurement currently being edited
-      selectedMeasurementAbility: 'all' // Default to 'all' to show all abilities initially
+      selectedMeasurementAbility: 'all', // Default to 'all' to show all abilities initially
+      passwordError: '', // Error message for invalid password
+      enteredPassword: ''
     }
   },
   mounted() {
@@ -528,7 +531,7 @@ export default {
         // Parse the club data by splitting CSV content into rows
         const rows = csvContent.split('\n').slice(1) // Skip header row
         this.clubsData = rows.map((row) => {
-          const [clubName, measurements, benchmarks, exercises] = row.split(';')
+          const [clubName, measurements, benchmarks, exercises, password] = row.split(';')
 
           // Convert measurements and benchmarks to arrays
           const measurementsArray = measurements ? measurements.split(',') : []
@@ -580,18 +583,26 @@ export default {
           return {
             clubName,
             measurements: mappedMeasurements, // Attach measurements with selected status, benchmarks, and ability
-            exercises: exercises ? exercises.split(',') : [] // Convert exercises to an array
+            exercises: exercises ? exercises.split(',') : [], // Convert exercises to an array
+            password: password.trim() // Ensure the password is trimmed
           }
         })
-
-        console.log(this.clubsData)
-
-        // Set the first club as selected after the data is fetched
-        if (this.clubsData.length > 0) {
-          this.selectedClub = this.clubsData[0].clubName
-        }
       } catch (error) {
         console.error('Failed to fetch club data:', error)
+      }
+    },
+    validatePassword() {
+      const matchingClub = this.clubsData.find(
+        (club) => club.password === this.enteredPassword.trim()
+      )
+
+      if (matchingClub) {
+        this.selectedClub = matchingClub.clubName
+        this.passwordError = ''
+      } else {
+        this.passwordError = 'Incorrect password. Please try again.'
+        // Ensure selectedClub is reset to null to prevent the rest of the UI from showing
+        this.selectedClub = null
       }
     },
     async fetchMeasurements() {
@@ -877,6 +888,17 @@ input[type='number']::-webkit-inner-spin-button,
 input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+input[type='password'] {
+  text-align: center;
+  background-color: #222232;
+  color: #79e098;
+  border: solid #79e098;
+  font-size: x-large;
+  width: 200px;
+  border-radius: 5px;
+  margin: 20px;
+  height: 40px;
 }
 button {
   padding: 10px 20px;
