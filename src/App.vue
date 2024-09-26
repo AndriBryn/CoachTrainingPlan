@@ -3,13 +3,22 @@
     <!-- Password input section -->
     <div v-if="!selectedClub || passwordError">
       <h3>Enter Club Password</h3>
-      <input
-        type="password"
-        v-model="enteredPassword"
-        placeholder="Enter password"
-        @keyup.enter="validatePassword"
-      />
-      <button @click="validatePassword">Submit</button>
+      <div style="display: flex; flex-direction: column">
+        <div>
+          <input
+            :type="passwordVisible ? 'text' : 'password'"
+            v-model="enteredPassword"
+            placeholder="Enter password"
+            @keyup.enter="validatePassword"
+          />
+          <button @click="validatePassword">Submit</button>
+        </div>
+        <div>
+          <button @click="togglePasswordVisibility" type="button">
+            {{ passwordVisible ? 'Hide Password' : 'Show Password' }}
+          </button>
+        </div>
+      </div>
       <p v-if="passwordError" style="color: red">{{ passwordError }}</p>
     </div>
     <!-- Display club selection, filters, and content only if no exercise is selected -->
@@ -434,7 +443,8 @@ export default {
       selectedMeasurement: null, // Stores the measurement currently being edited
       selectedMeasurementAbility: 'all', // Default to 'all' to show all abilities initially
       passwordError: '', // Error message for invalid password
-      enteredPassword: ''
+      enteredPassword: '',
+      passwordVisible: false
     }
   },
   mounted() {
@@ -590,6 +600,9 @@ export default {
       } catch (error) {
         console.error('Failed to fetch club data:', error)
       }
+    },
+    togglePasswordVisibility() {
+      this.passwordVisible = !this.passwordVisible
     },
     validatePassword() {
       const matchingClub = this.clubsData.find(
@@ -890,6 +903,17 @@ input[type='number']::-webkit-outer-spin-button {
   margin: 0;
 }
 input[type='password'] {
+  text-align: center;
+  background-color: #222232;
+  color: #79e098;
+  border: solid #79e098;
+  font-size: x-large;
+  width: 200px;
+  border-radius: 5px;
+  margin: 20px;
+  height: 40px;
+}
+input[type='text'] {
   text-align: center;
   background-color: #222232;
   color: #79e098;
