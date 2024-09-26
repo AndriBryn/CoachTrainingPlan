@@ -84,8 +84,17 @@
                 font-size: x-large;
               "
             >
+              <div style="width: 25%">
+                <label for="selectionFilter">Filter by Selection: </label>
+                <select id="selectionFilter" v-model="selectedExerciseStatus">
+                  <option value="all">All Exercises</option>
+                  <option value="selected">Selected Exercises</option>
+                  <option value="notSelected">Not Selected Exercises</option>
+                </select>
+              </div>
+
               <!-- Ability Filter Dropdown -->
-              <div style="width: 50%">
+              <div style="width: 25%">
                 <label for="abilityFilter">Filter by Skill: </label>
                 <select id="abilityFilter" v-model="selectedAbility">
                   <option value="all">All Skills</option>
@@ -96,12 +105,22 @@
               </div>
 
               <!-- Focus Filter Dropdown -->
-              <div style="width: 50%">
+              <div style="width: 25%">
                 <label for="focusFilter">Filter by Focus: </label>
                 <select id="focusFilter" v-model="selectedFocus">
                   <option value="all">All Focuses</option>
                   <option v-for="focus in uniqueFocuses" :key="focus" :value="focus">
                     {{ focus }}
+                  </option>
+                </select>
+              </div>
+              <!-- Intensity Level Filter Dropdown -->
+              <div style="width: 25%">
+                <label for="intensityFilter">Filter by Intensity: </label>
+                <select id="intensityFilter" v-model="selectedIntensity">
+                  <option value="all">All Intensities</option>
+                  <option v-for="level in uniqueIntensities" :key="level" :value="level">
+                    {{ level }}
                   </option>
                 </select>
               </div>
@@ -428,6 +447,8 @@ export default {
       filterType: 'all', // Filter for withBall or withoutBall or all
       selectedAbility: 'all', // Filter for exercises by ability
       selectedFocus: 'all', // Filter for exercises by focus
+      selectedIntensity: 'all', // Filter property for intensity levels
+      selectedExerciseStatus: 'all', // Default to showing all exercises
       selectedClub: null, // Filter for which club to display
       editingMode: 'exercises', // Toggle between 'measurements' and 'exercises'
       selectedExercise: null, // Stores the selected exercise for detailed view
@@ -482,17 +503,29 @@ export default {
       return filtered
     },
     uniqueMeasurementAbilities() {
-      return [...new Set(this.measurements.map((m) => m.ability))].filter(Boolean)
+      return [...new Set(this.measurements.map((m) => m.ability))]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b)) // Sort alphabetically
     },
 
     // Unique abilities for the dropdown filter
     uniqueAbilities() {
-      return [...new Set(this.exercises.map((exercise) => exercise.ability))].filter(Boolean)
+      return [...new Set(this.exercises.map((exercise) => exercise.ability))]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b)) // Sort alphabetically
     },
 
     // Unique focuses for the dropdown filter
     uniqueFocuses() {
-      return [...new Set(this.exercises.map((exercise) => exercise.focus))].filter(Boolean)
+      return [...new Set(this.exercises.map((exercise) => exercise.focus))]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b)) // Sort alphabetically
+    },
+    // Unique intensity levels for the filter
+    uniqueIntensities() {
+      return [...new Set(this.exercises.map((exercise) => exercise.intensity))]
+        .filter(Boolean)
+        .sort((a, b) => a - b) // Sort numerically from low to high
     },
 
     // Filter exercises based on selected ability and focus
@@ -501,7 +534,21 @@ export default {
         const abilityMatch =
           this.selectedAbility === 'all' || exercise.ability === this.selectedAbility
         const focusMatch = this.selectedFocus === 'all' || exercise.focus === this.selectedFocus
-        return abilityMatch && focusMatch
+        const intensityMatch =
+          this.selectedIntensity === 'all' ||
+          exercise.intensity.toString() === this.selectedIntensity
+
+        // Check if exercise is in the current club's selected exercises
+        const isSelected = this.currentClub.exercises.includes(exercise.exercise)
+
+        // Filter based on selected status
+        let statusMatch = true
+        if (this.selectedExerciseStatus === 'selected') {
+          statusMatch = isSelected
+        } else if (this.selectedExerciseStatus === 'notSelected') {
+          statusMatch = !isSelected
+        }
+        return abilityMatch && focusMatch && intensityMatch && statusMatch
       })
     },
 
