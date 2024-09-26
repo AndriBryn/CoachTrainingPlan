@@ -599,7 +599,7 @@ export default {
         const focusMatch = this.selectedFocus === 'all' || exercise.focus === this.selectedFocus
         const intensityMatch =
           this.selectedIntensity === 'all' ||
-          exercise.intensity.toString() === this.selectedIntensity
+          exercise.intensity === parseFloat(this.selectedIntensity)
 
         // Check if exercise is in the current club's selected exercises
         const isSelected = this.currentClub.exercises.includes(exercise.exercise)
@@ -616,9 +616,23 @@ export default {
 
       // Sort exercises based on the selected field and sorting order
       exercises.sort((a, b) => {
-        // Get values for the fields to compare, defaulting to empty strings if undefined
-        const fieldA = a[this.sortField] || ''
-        const fieldB = b[this.sortField] || ''
+        let fieldA = a[this.sortField]
+        let fieldB = b[this.sortField]
+
+        // Check if sorting by intensity and handle as a number
+        if (this.sortField === 'intensity') {
+          fieldA = parseFloat(fieldA) || 0
+          fieldB = parseFloat(fieldB) || 0
+          return this.sortOrder === 'asc' ? fieldA - fieldB : fieldB - fieldA
+        }
+
+        // Default to empty strings if fields are undefined
+        if (fieldA === undefined || fieldA === null) fieldA = ''
+        if (fieldB === undefined || fieldB === null) fieldB = ''
+
+        // Convert non-numeric fields to strings
+        fieldA = typeof fieldA !== 'number' ? String(fieldA) : fieldA
+        fieldB = typeof fieldB !== 'number' ? String(fieldB) : fieldB
 
         if (this.sortOrder === 'asc') {
           return fieldA.localeCompare(fieldB)
@@ -927,18 +941,15 @@ export default {
       this.sortField = field // Set the field to sort by (exercise, ability, focus, or intensity)
       this.sortOrder = order // Set the sorting order (asc or desc)
 
-      // Sort exercises based on the selected field and order
       this.exercises.sort((a, b) => {
         let fieldA = a[field]
         let fieldB = b[field]
 
-        console.log(`Sorting by ${field}:`, fieldA, fieldB) // Debugging output
-
-        // Check if the field is 'intensity', and handle as a number or string
+        // Check if the field is 'intensity', and handle it as a number
         if (field === 'intensity') {
-          // Convert to number if possible, otherwise fallback to 0
-          fieldA = isNaN(Number(fieldA)) ? 0 : Number(fieldA)
-          fieldB = isNaN(Number(fieldB)) ? 0 : Number(fieldB)
+          // Ensure both values are treated as numbers
+          fieldA = parseFloat(fieldA) || 0
+          fieldB = parseFloat(fieldB) || 0
 
           // Sort numerically for intensity
           return order === 'asc' ? fieldA - fieldB : fieldB - fieldA
@@ -948,16 +959,15 @@ export default {
         if (fieldA === undefined || fieldA === null) fieldA = ''
         if (fieldB === undefined || fieldB === null) fieldB = ''
 
-        // Convert field values to strings if necessary
-        if (typeof fieldA !== 'string') fieldA = String(fieldA)
-        if (typeof fieldB !== 'string') fieldB = String(fieldB)
+        // Convert field values to strings to safely use localeCompare, but only if they are not numbers
+        if (typeof fieldA !== 'number') fieldA = String(fieldA)
+        if (typeof fieldB !== 'number') fieldB = String(fieldB)
 
-        // Check if both fields are strings before using localeCompare
-        if (typeof fieldA === 'string' && typeof fieldB === 'string') {
-          return order === 'asc' ? fieldA.localeCompare(fieldB) : fieldB.localeCompare(fieldA)
+        // Sort alphabetically for other fields using localeCompare
+        if (order === 'asc') {
+          return fieldA.localeCompare(fieldB)
         } else {
-          // Fallback comparison if not strings (though this should handle most cases)
-          return 0
+          return fieldB.localeCompare(fieldA)
         }
       })
     },
