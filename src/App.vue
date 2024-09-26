@@ -232,12 +232,72 @@
                 font-size: x-large;
               "
             >
-              <div style="width: 300px; margin-left: 95px; font-weight: 600">Exercise</div>
+              <div style="width: 300px; margin-left: 95px; font-weight: 600">
+                Exercise
+                <!-- Sort Buttons -->
+                <button
+                  @click="sortExercises('exercise', 'asc')"
+                  style="margin-left: 10px; cursor: pointer"
+                >
+                  ▲
+                </button>
+                <button
+                  @click="sortExercises('exercise', 'desc')"
+                  style="margin-left: 5px; cursor: pointer"
+                >
+                  ▼
+                </button>
+              </div>
               <div style="width: 30px"></div>
-              <div style="width: 300px; font-weight: 600">Skill</div>
+              <div style="width: 300px; font-weight: 600; display: flex; align-items: center">
+                Skill
+                <!-- Sort Buttons for Skill -->
+                <button
+                  @click="sortExercises('ability', 'asc')"
+                  style="margin-left: 10px; cursor: pointer"
+                >
+                  ▲
+                </button>
+                <button
+                  @click="sortExercises('ability', 'desc')"
+                  style="margin-left: 5px; cursor: pointer"
+                >
+                  ▼
+                </button>
+              </div>
               <div style="width: 30px"></div>
-              <div style="width: 300px; font-weight: 600">Focus</div>
-              <div style="width: 220px; font-weight: 600">Other Info</div>
+              <div style="width: 300px; font-weight: 600; display: flex; align-items: center">
+                Focus
+                <!-- Sort Buttons for Focus -->
+                <button
+                  @click="sortExercises('focus', 'asc')"
+                  style="margin-left: 10px; cursor: pointer"
+                >
+                  ▲
+                </button>
+                <button
+                  @click="sortExercises('focus', 'desc')"
+                  style="margin-left: 5px; cursor: pointer"
+                >
+                  ▼
+                </button>
+              </div>
+              <div style="width: 220px; font-weight: 600; display: flex; align-items: center">
+                Other Info
+                <!-- Sort Buttons for Intensity Level -->
+                <button
+                  @click="sortExercises('intensity', 'asc')"
+                  style="margin-left: 10px; cursor: pointer"
+                >
+                  ▲
+                </button>
+                <button
+                  @click="sortExercises('intensity', 'desc')"
+                  style="margin-left: 5px; cursor: pointer"
+                >
+                  ▼
+                </button>
+              </div>
             </div>
 
             <ul>
@@ -465,7 +525,9 @@ export default {
       selectedMeasurementAbility: 'all', // Default to 'all' to show all abilities initially
       passwordError: '', // Error message for invalid password
       enteredPassword: '',
-      passwordVisible: false
+      passwordVisible: false,
+      sortField: 'exercise', // Default sorting field
+      sortOrder: 'asc' // Default sorting order
     }
   },
   mounted() {
@@ -528,9 +590,10 @@ export default {
         .sort((a, b) => a - b) // Sort numerically from low to high
     },
 
-    // Filter exercises based on selected ability and focus
+    // Filter and sort exercises based on selected criteria and sorting order
     filteredExercises() {
-      return this.exercises.filter((exercise) => {
+      // Apply filters first
+      let exercises = this.exercises.filter((exercise) => {
         const abilityMatch =
           this.selectedAbility === 'all' || exercise.ability === this.selectedAbility
         const focusMatch = this.selectedFocus === 'all' || exercise.focus === this.selectedFocus
@@ -550,6 +613,21 @@ export default {
         }
         return abilityMatch && focusMatch && intensityMatch && statusMatch
       })
+
+      // Sort exercises based on the selected field and sorting order
+      exercises.sort((a, b) => {
+        // Get values for the fields to compare, defaulting to empty strings if undefined
+        const fieldA = a[this.sortField] || ''
+        const fieldB = b[this.sortField] || ''
+
+        if (this.sortOrder === 'asc') {
+          return fieldA.localeCompare(fieldB)
+        } else {
+          return fieldB.localeCompare(fieldA)
+        }
+      })
+
+      return exercises
     },
 
     // Filter clubs based on the selected club
@@ -702,7 +780,7 @@ export default {
     },
 
     generateCSV() {
-      const header = 'clubs;measurements;benchmark;exercises'
+      const header = 'clubs;measurements;benchmark;exercises;password'
 
       const rows = this.clubsData.map((club) => {
         // Get selected measurements
@@ -733,7 +811,7 @@ export default {
         // Get selected exercises
         const exercises = club.exercises.join(',')
 
-        return `${club.clubName};${selectedMeasurements};${selectedBenchmarks};${exercises}`
+        return `${club.clubName};${selectedMeasurements};${selectedBenchmarks};${exercises};${club.password.trim()}`
       })
 
       return [header, ...rows].join('\n') // Combine header and rows into CSV format
@@ -843,6 +921,45 @@ export default {
         return measurement.benchmark[age][gender]
       }
       return 0
+    },
+    // Toggle sorting order
+    sortExercises(field, order) {
+      this.sortField = field // Set the field to sort by (exercise, ability, focus, or intensity)
+      this.sortOrder = order // Set the sorting order (asc or desc)
+
+      // Sort exercises based on the selected field and order
+      this.exercises.sort((a, b) => {
+        let fieldA = a[field]
+        let fieldB = b[field]
+
+        console.log(`Sorting by ${field}:`, fieldA, fieldB) // Debugging output
+
+        // Check if the field is 'intensity', and handle as a number or string
+        if (field === 'intensity') {
+          // Convert to number if possible, otherwise fallback to 0
+          fieldA = isNaN(Number(fieldA)) ? 0 : Number(fieldA)
+          fieldB = isNaN(Number(fieldB)) ? 0 : Number(fieldB)
+
+          // Sort numerically for intensity
+          return order === 'asc' ? fieldA - fieldB : fieldB - fieldA
+        }
+
+        // Convert undefined, null, or other non-string values to empty strings to avoid errors
+        if (fieldA === undefined || fieldA === null) fieldA = ''
+        if (fieldB === undefined || fieldB === null) fieldB = ''
+
+        // Convert field values to strings if necessary
+        if (typeof fieldA !== 'string') fieldA = String(fieldA)
+        if (typeof fieldB !== 'string') fieldB = String(fieldB)
+
+        // Check if both fields are strings before using localeCompare
+        if (typeof fieldA === 'string' && typeof fieldB === 'string') {
+          return order === 'asc' ? fieldA.localeCompare(fieldB) : fieldB.localeCompare(fieldA)
+        } else {
+          // Fallback comparison if not strings (though this should handle most cases)
+          return 0
+        }
+      })
     },
 
     updateBenchmark(measurement, value) {
