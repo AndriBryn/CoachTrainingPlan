@@ -232,71 +232,134 @@
                 font-size: x-large;
               "
             >
-              <div style="width: 300px; margin-left: 95px; font-weight: 600">
+              <!-- Selection Sort Buttons -->
+              <div
+                style="
+                  width: 50px;
+                  margin-left: 25px;
+                  font-weight: 600;
+                  display: flex;
+                  flex-direction: column;
+                "
+              >
+                <button
+                  @click="sortExercises('selected', 'asc')"
+                  style="cursor: pointer; width: 25px; padding: 0; border: none"
+                >
+                  ▲
+                </button>
+                <button
+                  @click="sortExercises('selected', 'desc')"
+                  style="cursor: pointer; width: 25px; padding: 0; border: none"
+                >
+                  ▼
+                </button>
+              </div>
+              <div
+                style="
+                  width: 300px;
+                  margin-left: 10px;
+                  font-weight: 600;
+                  display: flex;
+                  justify-content: center;
+                "
+              >
                 Exercise
                 <!-- Sort Buttons -->
-                <button
-                  @click="sortExercises('exercise', 'asc')"
-                  style="margin-left: 10px; cursor: pointer"
-                >
-                  ▲
-                </button>
-                <button
-                  @click="sortExercises('exercise', 'desc')"
-                  style="margin-left: 5px; cursor: pointer"
-                >
-                  ▼
-                </button>
+                <div style="display: flex; flex-direction: column">
+                  <button
+                    @click="sortExercises('exercise', 'asc')"
+                    style="cursor: pointer; width: 25px; padding: 0; border: none"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    @click="sortExercises('exercise', 'desc')"
+                    style="cursor: pointer; width: 25px; padding: 0; border: none"
+                  >
+                    ▼
+                  </button>
+                </div>
               </div>
               <div style="width: 30px"></div>
-              <div style="width: 300px; font-weight: 600; display: flex; align-items: center">
+              <div
+                style="
+                  width: 300px;
+                  font-weight: 600;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
                 Skill
                 <!-- Sort Buttons for Skill -->
-                <button
-                  @click="sortExercises('ability', 'asc')"
-                  style="margin-left: 10px; cursor: pointer"
-                >
-                  ▲
-                </button>
-                <button
-                  @click="sortExercises('ability', 'desc')"
-                  style="margin-left: 5px; cursor: pointer"
-                >
-                  ▼
-                </button>
+                <div style="display: flex; flex-direction: column">
+                  <button
+                    @click="sortExercises('ability', 'asc')"
+                    style="cursor: pointer; width: 25px; padding: 0; border: none"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    @click="sortExercises('ability', 'desc')"
+                    style="cursor: pointer; width: 25px; padding: 0; border: none"
+                  >
+                    ▼
+                  </button>
+                </div>
               </div>
               <div style="width: 30px"></div>
-              <div style="width: 300px; font-weight: 600; display: flex; align-items: center">
+              <div
+                style="
+                  width: 300px;
+                  font-weight: 600;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
                 Focus
                 <!-- Sort Buttons for Focus -->
-                <button
-                  @click="sortExercises('focus', 'asc')"
-                  style="margin-left: 10px; cursor: pointer"
-                >
-                  ▲
-                </button>
-                <button
-                  @click="sortExercises('focus', 'desc')"
-                  style="margin-left: 5px; cursor: pointer"
-                >
-                  ▼
-                </button>
+                <div style="display: flex; flex-direction: column">
+                  <button
+                    @click="sortExercises('focus', 'asc')"
+                    style="cursor: pointer; width: 25px; padding: 0; border: none"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    @click="sortExercises('focus', 'desc')"
+                    style="cursor: pointer; width: 25px; padding: 0; border: none"
+                  >
+                    ▼
+                  </button>
+                </div>
               </div>
-              <div style="width: 220px; font-weight: 600; display: flex; align-items: center">
+              <div
+                style="
+                  width: 220px;
+                  font-weight: 600;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
                 Other Info
                 <!-- Sort Buttons for Intensity Level -->
-                <button
-                  @click="sortExercises('intensity', 'asc')"
-                  style="margin-left: 10px; cursor: pointer"
-                >
-                  ▲
-                </button>
-                <button
-                  @click="sortExercises('intensity', 'desc')"
-                  style="margin-left: 5px; cursor: pointer"
-                >
-                  ▼
-                </button>
+                <div style="display: flex; flex-direction: column">
+                  <button
+                    @click="sortExercises('intensity', 'asc')"
+                    style="cursor: pointer; width: 25px; padding: 0; border: none"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    @click="sortExercises('intensity', 'desc')"
+                    style="cursor: pointer; width: 25px; padding: 0; border: none"
+                  >
+                    ▼
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -938,7 +1001,7 @@ export default {
     },
     // Toggle sorting order
     sortExercises(field, order) {
-      this.sortField = field // Set the field to sort by (exercise, ability, focus, or intensity)
+      this.sortField = field // Set the field to sort by (exercise, ability, focus, intensity, or selected)
       this.sortOrder = order // Set the sorting order (asc or desc)
 
       this.exercises.sort((a, b) => {
@@ -947,28 +1010,35 @@ export default {
 
         // Check if the field is 'intensity', and handle it as a number
         if (field === 'intensity') {
-          // Ensure both values are treated as numbers
           fieldA = parseFloat(fieldA) || 0
           fieldB = parseFloat(fieldB) || 0
-
-          // Sort numerically for intensity
           return order === 'asc' ? fieldA - fieldB : fieldB - fieldA
         }
 
-        // Convert undefined, null, or other non-string values to empty strings to avoid errors
+        // Special case: Sorting by selection status
+        if (field === 'selected') {
+          // Check if the exercises are selected in the current club
+          const isSelectedA = this.currentClub.exercises.includes(a.exercise)
+          const isSelectedB = this.currentClub.exercises.includes(b.exercise)
+
+          // Convert selection status to numeric values: selected as 1, not selected as 0
+          fieldA = isSelectedA ? 1 : 0
+          fieldB = isSelectedB ? 1 : 0
+
+          // Sort by selection status
+          return order === 'asc' ? fieldA - fieldB : fieldB - fieldA
+        }
+
+        // Convert undefined, null, or other non-string values to empty strings
         if (fieldA === undefined || fieldA === null) fieldA = ''
         if (fieldB === undefined || fieldB === null) fieldB = ''
 
-        // Convert field values to strings to safely use localeCompare, but only if they are not numbers
+        // Convert field values to strings for localeCompare, but only if they are not numbers
         if (typeof fieldA !== 'number') fieldA = String(fieldA)
         if (typeof fieldB !== 'number') fieldB = String(fieldB)
 
         // Sort alphabetically for other fields using localeCompare
-        if (order === 'asc') {
-          return fieldA.localeCompare(fieldB)
-        } else {
-          return fieldB.localeCompare(fieldA)
-        }
+        return order === 'asc' ? fieldA.localeCompare(fieldB) : fieldB.localeCompare(fieldA)
       })
     },
 
