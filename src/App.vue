@@ -66,6 +66,34 @@
             </div>
           </div>
 
+          <!-- Age and Gender Selection -->
+          <div
+            style="
+              background-color: #2f2f3e;
+              border-radius: 5px;
+              display: flex;
+              justify-content: space-between;
+              padding: 10px;
+              margin-bottom: 10px;
+            "
+            v-if="exercises.length && editingMode === 'exercises'"
+          >
+            <div style="width: 50%">
+              <label for="ageSelect">Select Age: </label>
+              <select v-model="selectedAge" id="ageSelect" style="width: 80px">
+                <option v-for="age in ageOptions" :key="age" :value="age">{{ age }}</option>
+              </select>
+            </div>
+
+            <div style="width: 50%">
+              <label for="genderSelect">Select Gender: </label>
+              <select v-model="selectedGender" id="genderSelect" style="width: 80px">
+                <option value="m">Male</option>
+                <option value="f">Female</option>
+              </select>
+            </div>
+          </div>
+
           <!-- Filter options for exercises -->
           <div
             v-if="exercises.length && editingMode === 'exercises'"
@@ -379,7 +407,9 @@
                   <div class="tooltip">
                     <img
                       :src="
-                        club.exercises.includes(exercise.exercise)
+                        club.exercisesByAgeGender[`${selectedAge}-${selectedGender}`]?.includes(
+                          exercise.exercise
+                        )
                           ? '/images/checkmark.png'
                           : '/images/checkmark-grey.png'
                       "
@@ -387,13 +417,17 @@
                       class="icon"
                       style="cursor: pointer; margin-right: 10px"
                       :alt="
-                        club.exercises.includes(exercise.exercise)
+                        club.exercisesByAgeGender[`${selectedAge}-${selectedGender}`]?.includes(
+                          exercise.exercise
+                        )
                           ? 'Remove Exercise'
                           : 'Add Exercise'
                       "
                     />
                     <span class="tooltiptext">{{
-                      club.exercises.includes(exercise.exercise)
+                      club.exercisesByAgeGender[`${selectedAge}-${selectedGender}`]?.includes(
+                        exercise.exercise
+                      )
                         ? 'Remove Exercise'
                         : 'Add Exercise'
                     }}</span>
@@ -464,7 +498,7 @@
           <div class="indicators">
             <div></div>
             <!-- Add "Add Exercise" and "Remove Exercise" buttons styled like in Edit Exercises -->
-            <div class="tooltip">
+            <div class="tooltip" v-if="selectedExercise.exercise">
               <img
                 :src="
                   !currentClub.exercises.includes(selectedExercise.exercise)
@@ -480,7 +514,7 @@
                 @click="toggleExerciseSelection(currentClub, selectedExercise.exercise)"
                 style="cursor: pointer"
               />
-              <span class="tooltiptext">
+              <span class="tooltiptext" v-if="selectedExercise.exercise">
                 {{
                   !currentClub.exercises.includes(selectedExercise.exercise)
                     ? 'Add Exercise'
@@ -655,6 +689,14 @@ export default {
 
     // Filter and sort exercises based on selected criteria and sorting order
     filteredExercises() {
+      const age = this.selectedAge // Get the selected age
+      const gender = this.selectedGender // Get the selected gender
+
+      // Ensure the current club and its exercises are accessed safely
+      const selectedExercises = [
+        ...(this.currentClub.exercisesByAgeGender?.[`${age}-${gender}`] || [])
+      ]
+
       // Apply filters first
       let exercises = this.exercises.filter((exercise) => {
         const abilityMatch =
@@ -664,8 +706,8 @@ export default {
           this.selectedIntensity === 'all' ||
           exercise.intensity === parseFloat(this.selectedIntensity)
 
-        // Check if exercise is in the current club's selected exercises
-        const isSelected = this.currentClub.exercises.includes(exercise.exercise)
+        // Check if the exercise is selected for the current age and gender
+        const isSelected = selectedExercises.includes(exercise.exercise)
 
         // Filter based on selected status
         let statusMatch = true
@@ -674,33 +716,40 @@ export default {
         } else if (this.selectedExerciseStatus === 'notSelected') {
           statusMatch = !isSelected
         }
+
         return abilityMatch && focusMatch && intensityMatch && statusMatch
       })
 
-      // Sort exercises based on the selected field and sorting order
+      // Sorting logic remains the same
       exercises.sort((a, b) => {
         let fieldA = a[this.sortField]
         let fieldB = b[this.sortField]
 
-        // Check if sorting by intensity and handle as a number
-        if (this.sortField === 'intensity') {
-          fieldA = parseFloat(fieldA) || 0
-          fieldB = parseFloat(fieldB) || 0
+        // Handle sorting by 'selected' field as a special case
+        if (this.sortField === 'selected') {
+          fieldA = selectedExercises.includes(a.exercise) ? 1 : 0
+          fieldB = selectedExercises.includes(b.exercise) ? 1 : 0
           return this.sortOrder === 'asc' ? fieldA - fieldB : fieldB - fieldA
         }
 
-        // Default to empty strings if fields are undefined
+        // Convert undefined or null to empty strings to prevent errors
         if (fieldA === undefined || fieldA === null) fieldA = ''
         if (fieldB === undefined || fieldB === null) fieldB = ''
 
-        // Convert non-numeric fields to strings
-        fieldA = typeof fieldA !== 'number' ? String(fieldA) : fieldA
-        fieldB = typeof fieldB !== 'number' ? String(fieldB) : fieldB
-
-        if (this.sortOrder === 'asc') {
-          return fieldA.localeCompare(fieldB)
+        // Explicit type checks for sorting
+        if (typeof fieldA === 'string' && typeof fieldB === 'string') {
+          // Use localeCompare for string fields
+          return this.sortOrder === 'asc'
+            ? fieldA.localeCompare(fieldB)
+            : fieldB.localeCompare(fieldA)
+        } else if (typeof fieldA === 'number' && typeof fieldB === 'number') {
+          // Numeric comparison for numbers
+          return this.sortOrder === 'asc' ? fieldA - fieldB : fieldB - fieldA
         } else {
-          return fieldB.localeCompare(fieldA)
+          // Fallback for other types, compare as generic objects
+          if (fieldA > fieldB) return this.sortOrder === 'asc' ? 1 : -1
+          if (fieldA < fieldB) return this.sortOrder === 'asc' ? -1 : 1
+          return 0
         }
       })
 
@@ -709,6 +758,7 @@ export default {
 
     // Filter clubs based on the selected club
     filteredClubs() {
+      console.log(this.clubsData.filter((club) => club.clubName === this.selectedClub))
       if (this.selectedClub === 'all') {
         return this.clubsData
       }
@@ -748,6 +798,34 @@ export default {
           // Convert measurements and benchmarks to arrays
           const measurementsArray = measurements ? measurements.split(',') : []
           const benchmarksArray = benchmarks ? benchmarks.split(',') : []
+
+          // Initialize an object to store exercises by age and gender
+          const exercisesByAgeGender = {}
+
+          // Parse exercises based on the new format: "age-gender-exercise1,exercise2,.../age-gender-exercise1,exercise2,..."
+          if (exercises) {
+            // Split by "/" to get each age-gender group
+            const ageGenderGroups = exercises.split('/')
+
+            ageGenderGroups.forEach((group) => {
+              // Split each group by "-" to separate age, gender, and exercise list
+              const [age, gender, exerciseList] = group.split('-', 3)
+
+              // Create the key in the format age-gender
+              const key = `${age}-${gender}`
+
+              // Initialize the key as an array if it does not exist
+              if (!exercisesByAgeGender[key]) {
+                exercisesByAgeGender[key] = []
+              }
+
+              // Split the exerciseList by commas to get the individual exercises and add them to the key
+              if (exerciseList) {
+                const exercisesArray = exerciseList.split(',')
+                exercisesByAgeGender[key].push(...exercisesArray)
+              }
+            })
+          }
 
           // Map measurements with selected status, benchmarks for each age-gender group, and map exercise to title
           const mappedMeasurements = this.measurements.map((measurement) => {
@@ -795,7 +873,7 @@ export default {
           return {
             clubName,
             measurements: mappedMeasurements, // Attach measurements with selected status, benchmarks, and ability
-            exercises: exercises ? exercises.split(',') : [], // Convert exercises to an array
+            exercisesByAgeGender, // Correctly store exercises by age and gender
             password: password.trim() // Ensure the password is trimmed
           }
         })
@@ -885,10 +963,17 @@ export default {
           })
           .join(',')
 
-        // Get selected exercises
-        const exercises = club.exercises.join(',')
+        // Get exercises for every age and gender
+        const exercisesByAgeGender = Object.entries(club.exercisesByAgeGender)
+          .map(([key, exercises]) => {
+            // Key format is 'age-gender'
+            const [age, gender] = key.split('-')
+            // Join exercises with commas and format as 'age-gender-exercise1,exercise2,...'
+            return `${age}-${gender}-${exercises.join(',')}`
+          })
+          .join('/') // Join all age-gender groups with a slash
 
-        return `${club.clubName};${selectedMeasurements};${selectedBenchmarks};${exercises};${club.password.trim()}`
+        return `${club.clubName};${selectedMeasurements};${selectedBenchmarks};${exercisesByAgeGender};${club.password.trim()}`
       })
 
       return [header, ...rows].join('\n') // Combine header and rows into CSV format
@@ -940,17 +1025,22 @@ export default {
     },
     // Toggle selection for exercises
     toggleExerciseSelection(club, exerciseName) {
-      // Check if club.exercises is defined
-      if (!club.exercises) {
-        this.$set(club, 'exercises', [])
+      // Create a key for the selected age and gender combination
+      const key = `${this.selectedAge}-${this.selectedGender}`
+
+      // Check if the exercises array exists for the selected age and gender; if not, create it
+      if (!club.exercisesByAgeGender[key]) {
+        this.$set(club.exercisesByAgeGender, key, [])
       }
-      const index = club.exercises.indexOf(exerciseName)
+
+      // Find the index of the exercise in the correct array
+      const index = club.exercisesByAgeGender[key].indexOf(exerciseName)
+
+      // Add or remove the exercise based on its current presence
       if (index === -1) {
-        // Add exercise to the club.exercises array
-        club.exercises.push(exerciseName)
+        club.exercisesByAgeGender[key].push(exerciseName)
       } else {
-        // Remove the exercise from the club.exercises array
-        club.exercises.splice(index, 1)
+        club.exercisesByAgeGender[key].splice(index, 1)
       }
     },
     nextExercise() {
@@ -1010,9 +1100,9 @@ export default {
 
         // Check if the field is 'intensity', and handle it as a number
         if (field === 'intensity') {
-          fieldA = parseFloat(fieldA) || 0
-          fieldB = parseFloat(fieldB) || 0
-          return order === 'asc' ? fieldA - fieldB : fieldB - fieldA
+          fieldA = parseFloat(fieldA) || 0 // Ensure fieldA is a number
+          fieldB = parseFloat(fieldB) || 0 // Ensure fieldB is a number
+          return order === 'asc' ? fieldA - fieldB : fieldB - fieldA // Numeric comparison
         }
 
         // Special case: Sorting by selection status
@@ -1033,11 +1123,17 @@ export default {
         if (fieldA === undefined || fieldA === null) fieldA = ''
         if (fieldB === undefined || fieldB === null) fieldB = ''
 
-        // Convert field values to strings for localeCompare, but only if they are not numbers
-        if (typeof fieldA !== 'number') fieldA = String(fieldA)
-        if (typeof fieldB !== 'number') fieldB = String(fieldB)
+        // Check if both fields are strings before using localeCompare
+        if (typeof fieldA === 'string' && typeof fieldB === 'string') {
+          // Sort alphabetically using localeCompare
+          return order === 'asc' ? fieldA.localeCompare(fieldB) : fieldB.localeCompare(fieldA)
+        }
 
-        // Sort alphabetically for other fields using localeCompare
+        // If the fields are not strings, convert them to strings before comparison
+        if (typeof fieldA !== 'string') fieldA = String(fieldA)
+        if (typeof fieldB !== 'string') fieldB = String(fieldB)
+
+        // Ensure comparison fallback does not cause localeCompare errors
         return order === 'asc' ? fieldA.localeCompare(fieldB) : fieldB.localeCompare(fieldA)
       })
     },
