@@ -498,31 +498,31 @@
           <div class="indicators">
             <div></div>
             <!-- Add "Add Exercise" and "Remove Exercise" buttons styled like in Edit Exercises -->
-            <div class="tooltip" v-if="selectedExercise.exercise">
+            <!--div class="tooltip" v-if="selectedExercise.exercise">
               <img
                 :src="
-                  !currentClub.exercises.includes(selectedExercise.exercise)
-                    ? '/images/checkmark-grey.png'
-                    : '/images/checkmark.png'
+                  currentClub.exercises.includes(selectedExercise.exercise)
+                    ? '/images/checkmark.png'
+                    : '/images/checkmark-grey.png'
                 "
-                :alt="
-                  !currentClub.exercises.includes(selectedExercise.exercise)
-                    ? 'Add Exercise'
-                    : 'Remove Exercise'
-                "
-                class="icon"
                 @click="toggleExerciseSelection(currentClub, selectedExercise.exercise)"
+                class="icon"
                 style="cursor: pointer"
+                :alt="
+                  currentClub.exercises.includes(selectedExercise.exercise)
+                    ? 'Remove Exercise'
+                    : 'Add Exercise'
+                "
               />
-              <span class="tooltiptext" v-if="selectedExercise.exercise">
+              <span class="tooltiptext">
                 {{
-                  !currentClub.exercises.includes(selectedExercise.exercise)
-                    ? 'Add Exercise'
-                    : 'Remove Exercise'
+                  currentClub.exercises.includes(selectedExercise.exercise)
+                    ? 'Remove Exercise'
+                    : 'Add Exercise'
                 }}
               </span>
             </div>
-            <div></div>
+            <div></div-->
           </div>
 
           <!-- Display image if available -->
