@@ -44,6 +44,12 @@
             >
               Select Exercises
             </button>
+            <button
+              @click="editingMode = 'trainingplan'"
+              :class="{ active: editingMode === 'trainingplan' }"
+            >
+              Edit training plans
+            </button>
           </div>
 
           <!-- Filter options for measurements -->
@@ -607,7 +613,7 @@ export default {
       selectedIntensity: 'all', // Filter property for intensity levels
       selectedExerciseStatus: 'all', // Default to showing all exercises
       selectedClub: null, // Filter for which club to display
-      editingMode: 'exercises', // Toggle between 'measurements' and 'exercises'
+      editingMode: 'exercises',
       selectedExercise: null, // Stores the selected exercise for detailed view
       currentExerciseIndex: 0, // Track the index of the selected exercise
       showVideo: false, // Controls the display of the video modal
@@ -790,8 +796,9 @@ export default {
         const result = await response.json()
         const csvContent = result.csvContent
 
-        // Parse the club data by splitting CSV content into rows
         const rows = csvContent.split('\n').slice(1) // Skip header row
+        let basicClubData = null // Variable to store BasicClub data
+
         this.clubsData = rows.map((row) => {
           const [clubName, measurements, benchmarks, exercises, password] = row.split(';')
 
@@ -801,80 +808,75 @@ export default {
 
           // Initialize an object to store exercises by age and gender
           const exercisesByAgeGender = {}
-
-          // Parse exercises based on the new format: "age-gender-exercise1,exercise2,.../age-gender-exercise1,exercise2,..."
           if (exercises) {
-            // Split by "/" to get each age-gender group
             const ageGenderGroups = exercises.split('/')
-
             ageGenderGroups.forEach((group) => {
-              // Split each group by "-" to separate age, gender, and exercise list
               const [age, gender, exerciseList] = group.split('-', 3)
-
-              // Create the key in the format age-gender
               const key = `${age}-${gender}`
-
-              // Initialize the key as an array if it does not exist
-              if (!exercisesByAgeGender[key]) {
-                exercisesByAgeGender[key] = []
-              }
-
-              // Split the exerciseList by commas to get the individual exercises and add them to the key
-              if (exerciseList) {
-                const exercisesArray = exerciseList.split(',')
-                exercisesByAgeGender[key].push(...exercisesArray)
-              }
+              exercisesByAgeGender[key] = exerciseList ? exerciseList.split(',') : []
             })
           }
 
-          // Map measurements with selected status, benchmarks for each age-gender group, and map exercise to title
+          // Store BasicClub data for later use
+          if (clubName === 'BasicClub') {
+            basicClubData = {
+              measurements: measurementsArray,
+              benchmarks: benchmarksArray
+            }
+          }
+
+          // Map measurements with selected status and benchmarks
           const mappedMeasurements = this.measurements.map((measurement) => {
             const existingMeasurementIndex = measurementsArray.indexOf(measurement.name)
             const isSelected = existingMeasurementIndex !== -1
-
-            // Initialize benchmark object
             let benchmark = {}
 
             // If the measurement is selected and there are existing benchmarks
             if (isSelected && benchmarksArray[existingMeasurementIndex]) {
-              // Split benchmark by "/" to get individual age-gender-benchmark groups
               const benchmarkGroups = benchmarksArray[existingMeasurementIndex].split('/')
               benchmarkGroups.forEach((group) => {
                 const [age, gender, time] = group.split('-')
                 if (!benchmark[age]) benchmark[age] = {}
-                benchmark[age][gender] = parseFloat(time) // Retain existing benchmark
+                benchmark[age][gender] = parseFloat(time)
               })
             }
 
-            // Ensure that every age-gender pair has a value, defaulting to 0 if missing
+            // Ensure that every age-gender pair has a value from BasicClub if no benchmark exists
             this.ageOptions.forEach((age) => {
               if (!benchmark[age]) benchmark[age] = {}
               this.genderOptions.forEach((gender) => {
                 if (!benchmark[age][gender]) {
-                  benchmark[age][gender] = 0 // Set to 0 if no benchmark exists
+                  if (basicClubData) {
+                    // Use BasicClub benchmarks as default
+                    const basicClubIndex = basicClubData.measurements.indexOf(measurement.name)
+                    if (basicClubIndex !== -1 && basicClubData.benchmarks[basicClubIndex]) {
+                      const basicBenchmarkGroups =
+                        basicClubData.benchmarks[basicClubIndex].split('/')
+                      basicBenchmarkGroups.forEach((group) => {
+                        const [basicAge, basicGender, basicTime] = group.split('-')
+                        if (basicAge === age && basicGender === gender) {
+                          benchmark[age][gender] = parseFloat(basicTime)
+                        }
+                      })
+                    }
+                  }
                 }
               })
             })
-
-            // Add ability mapping from measurements fetched
-            const measurementAbility = this.measurements.find(
-              (m) => m.name === measurement.name
-            )?.ability
 
             return {
               name: measurement.name,
               selected: isSelected,
               benchmark: benchmark || {}, // Store benchmarks for each age and gender
-              title: measurement.exercise || 'Unknown Title', // Map the global `exercise` to `title`
-              ability: measurementAbility || '' // Assign the ability to the measurement
+              title: measurement.exercise || 'Unknown Title'
             }
           })
 
           return {
             clubName,
-            measurements: mappedMeasurements, // Attach measurements with selected status, benchmarks, and ability
-            exercisesByAgeGender, // Correctly store exercises by age and gender
-            password: password.trim() // Ensure the password is trimmed
+            measurements: mappedMeasurements,
+            exercisesByAgeGender,
+            password: password.trim()
           }
         })
       } catch (error) {
@@ -1214,7 +1216,7 @@ li {
   border-radius: 5px;
 }
 .edit-toggle button {
-  width: 48%;
+  width: 32%;
   padding: 10px;
   cursor: pointer;
   background-color: #222232;
