@@ -547,8 +547,7 @@
                 <label style="color: #79e098; font-weight: bold; margin-right: 5px">Sets:</label>
                 <input
                   type="text"
-                  v-model.number="exercise.sets"
-                  min="1"
+                  v-model="exercise.sets"
                   style="width: 60px; text-align: center"
                 />
               </div>
