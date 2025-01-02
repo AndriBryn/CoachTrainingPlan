@@ -1276,7 +1276,7 @@ export default {
 
       // Ensure the day is initialized
       if (!this.trainingPlan[day]) {
-        this.$set(this.trainingPlan, day, []) // Use Vue's reactive $set
+        this.trainingPlan[day] = [] // Directly initialize the array
       }
 
       // Check if the exercise is already added
