@@ -488,7 +488,7 @@
 
     <!-- Edit training plans -->
     <div
-      v-if="measurements.length && editingMode === 'trainingplan'"
+      v-if="editingMode === 'trainingplan'"
       style="background-color: #2f2f3e; border-radius: 5px; padding: 20px"
     >
       <h2 style="color: #79e098">Create and Customize Your Training Plan</h2>
