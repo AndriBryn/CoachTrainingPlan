@@ -57,7 +57,7 @@ export const handler = async function (event, context) {
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', // Allow specific methods
         'Access-Control-Allow-Headers': 'Content-Type' // Allow specific headers
       },
-      body: JSON.stringify({ csvContent })
+      body: JSON.stringify({ exercises })
     }
   } catch (error) {
     console.error(error)
