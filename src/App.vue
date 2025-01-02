@@ -489,9 +489,96 @@
     <!-- Edit training plans -->
     <div
       v-if="measurements.length && editingMode === 'trainingplan'"
-      style="background-color: #2f2f3e; border-radius: 5px"
+      style="background-color: #2f2f3e; border-radius: 5px; padding: 20px"
     >
-      testing
+      <h2 style="color: #79e098">Create and Customize Your Training Plan</h2>
+
+      <!-- Step 1: Select number of training days -->
+      <div style="margin-bottom: 20px">
+        <label for="trainingDays" style="color: #79e098; font-weight: bold"
+          >Number of Training Days:</label
+        >
+        <input
+          type="number"
+          id="trainingDays"
+          v-model.number="trainingDays"
+          min="1"
+          max="30"
+          style="width: 80px; text-align: center"
+        />
+      </div>
+
+      <!-- Step 2: Assign exercises to each day -->
+      <div
+        v-for="day in trainingDays"
+        :key="day"
+        style="margin-bottom: 20px; padding: 10px; border: 1px solid #79e098; border-radius: 5px"
+      >
+        <h3 style="color: #79e098; font-weight: bold">Day {{ day }}</h3>
+
+        <!-- Add exercises to the day -->
+        <div style="margin-bottom: 10px">
+          <label style="color: #79e098; font-weight: bold">Select Exercise:</label>
+          <select v-model="selectedExerciseForDay[day]" style="width: 300px">
+            <option value="" disabled>Select an Exercise</option>
+            <option
+              v-for="exercise in exercises"
+              :key="exercise.exercise"
+              :value="exercise.exercise"
+            >
+              {{ exercise.exercise }}
+            </option>
+          </select>
+          <button @click="addExerciseToDay(day)" style="margin-left: 10px">Add</button>
+        </div>
+
+        <!-- Display exercises for the day -->
+        <ul style="list-style: none; padding: 0">
+          <li
+            v-for="(exercise, index) in trainingPlan[day]"
+            :key="index"
+            style="background-color: #222232; padding: 10px; margin: 5px; border-radius: 5px"
+          >
+            <div style="display: flex; justify-content: space-between; align-items: center">
+              <div>
+                <strong style="color: #79e098">{{ exercise.name }}</strong>
+              </div>
+              <div>
+                <label style="color: #79e098; font-weight: bold; margin-right: 5px">Sets:</label>
+                <input
+                  type="number"
+                  v-model.number="exercise.sets"
+                  min="1"
+                  style="width: 60px; text-align: center"
+                />
+              </div>
+              <button @click="removeExerciseFromDay(day, index)" style="margin-left: 10px">
+                Remove
+              </button>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Step 3: Display training plan overview -->
+      <div>
+        <h3 style="color: #79e098; font-weight: bold">Training Plan Overview</h3>
+        <div v-for="day in trainingDays" :key="day" style="margin-bottom: 10px">
+          <strong style="color: #79e098">Day {{ day }}:</strong>
+          <span v-if="trainingPlan[day].length === 0" style="color: #ccc"
+            >No exercises assigned</span
+          >
+          <ul v-else style="list-style: none; padding: 0; margin: 0">
+            <li
+              v-for="exercise in trainingPlan[day]"
+              :key="exercise.name"
+              style="color: #79e098; margin-left: 10px"
+            >
+              {{ exercise.name }} ({{ exercise.sets }} sets)
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
 
     <!-- Display selected exercise details when an exercise is selected -->
@@ -638,7 +725,10 @@ export default {
       enteredPassword: '',
       passwordVisible: false,
       sortField: 'exercise', // Default sorting field
-      sortOrder: 'asc' // Default sorting order
+      sortOrder: 'asc', // Default sorting order
+      trainingDays: 7, // Default number of training days
+      trainingPlan: {}, // Training plan structure
+      selectedExerciseForDay: {} // Track the selected exercise for each day
     }
   },
   mounted() {
@@ -1176,6 +1266,43 @@ export default {
       return measurements.filter(
         (measurement) => measurement.ability === this.selectedMeasurementAbility
       )
+    },
+    // Add an exercise to a specific day
+    addExerciseToDay(day) {
+      if (!this.selectedExerciseForDay[day]) {
+        alert('Please select an exercise first.')
+        return
+      }
+
+      if (!this.trainingPlan[day]) {
+        this.$set(this.trainingPlan, day, []) // Initialize the day if not already present
+      }
+
+      // Check if the exercise is already added
+      if (
+        this.trainingPlan[day].some(
+          (exercise) => exercise.name === this.selectedExerciseForDay[day]
+        )
+      ) {
+        alert('This exercise is already added for this day.')
+        return
+      }
+
+      this.trainingPlan[day].push({
+        name: this.selectedExerciseForDay[day],
+        sets: 1 // Default number of sets
+      })
+
+      this.selectedExerciseForDay[day] = '' // Reset the selection
+    },
+
+    // Remove an exercise from a specific day
+    removeExerciseFromDay(day, index) {
+      this.trainingPlan[day].splice(index, 1)
+
+      if (this.trainingPlan[day].length === 0) {
+        this.$delete(this.trainingPlan, day) // Clean up empty days
+      }
     }
   }
 }
