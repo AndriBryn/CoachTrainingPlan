@@ -27,6 +27,11 @@ export const handler = async function (event, context) {
 
     return {
       statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*', // Allow requests from any origin
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', // Allow specific methods
+        'Access-Control-Allow-Headers': 'Content-Type' // Allow specific headers
+      },
       body: JSON.stringify({ csvContent })
     }
   } catch (error) {
@@ -34,6 +39,9 @@ export const handler = async function (event, context) {
 
     return {
       statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*' // Include CORS headers in the error response as well
+      },
       body: JSON.stringify({ error: 'Failed to retrieve the CSV file', details: error.message })
     }
   }

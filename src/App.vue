@@ -573,7 +573,7 @@
               :key="exercise.name"
               style="color: #79e098; margin-left: 10px"
             >
-              {{ exercise }} {{ exercise.name }} {{ exercise.sets }}
+              {{ exercise.exercise }}: {{ exercise.sets }}
             </li>
           </ul>
         </div>
@@ -889,7 +889,9 @@ export default {
     },
     async fetchClubData() {
       try {
-        const response = await fetch('/.netlify/functions/get-csv-file')
+        const response = await fetch(
+          'https://coachtrainingplan.netlify.app/.netlify/functions/get-csv-file'
+        )
         const result = await response.json()
         const csvContent = result.csvContent
 
@@ -999,7 +1001,9 @@ export default {
     },
     async fetchMeasurements() {
       try {
-        const response = await fetch('/.netlify/functions/get-measurements')
+        const response = await fetch(
+          'https://coachtrainingplan.netlify.app/.netlify/functions/get-measurements'
+        )
         const result = await response.json()
         this.measurements = result.measurements // Use measurements from backend
         console.log(this.measurements)
@@ -1010,7 +1014,9 @@ export default {
 
     async fetchExercises() {
       try {
-        const response = await fetch('/.netlify/functions/get-exercises')
+        const response = await fetch(
+          'https://coachtrainingplan.netlify.app/.netlify/functions/get-exercises'
+        )
         const result = await response.json()
         this.exercises = result.exercises.map((exercise) => ({
           ...exercise,
