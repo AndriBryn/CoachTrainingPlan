@@ -546,7 +546,7 @@
               <div>
                 <label style="color: #79e098; font-weight: bold; margin-right: 5px">Sets:</label>
                 <input
-                  type="number"
+                  type="text"
                   v-model.number="exercise.sets"
                   min="1"
                   style="width: 60px; text-align: center"
@@ -574,7 +574,7 @@
               :key="exercise.name"
               style="color: #79e098; margin-left: 10px"
             >
-              {{ exercise.name }} ({{ exercise.sets }} sets)
+              {{ exercise }} {{ exercise.name }} {{ exercise.sets }}
             </li>
           </ul>
         </div>
