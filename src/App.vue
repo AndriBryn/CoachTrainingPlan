@@ -565,7 +565,7 @@
         <h3 style="color: #79e098; font-weight: bold">Training Plan Overview</h3>
         <div v-for="day in trainingDays" :key="day" style="margin-bottom: 10px">
           <strong style="color: #79e098">Day {{ day }}:</strong>
-          <span v-if="trainingPlan[day].length === 0" style="color: #ccc"
+          <span v-if="(trainingPlan[day] || []).length === 0" style="color: #ccc"
             >No exercises assigned</span
           >
           <ul v-else style="list-style: none; padding: 0; margin: 0">
@@ -1274,8 +1274,9 @@ export default {
         return
       }
 
+      // Ensure the day is initialized
       if (!this.trainingPlan[day]) {
-        this.$set(this.trainingPlan, day, []) // Initialize the day if not already present
+        this.$set(this.trainingPlan, day, []) // Use Vue's reactive $set
       }
 
       // Check if the exercise is already added
@@ -1300,7 +1301,7 @@ export default {
     removeExerciseFromDay(day, index) {
       this.trainingPlan[day].splice(index, 1)
 
-      if (this.trainingPlan[day].length === 0) {
+      if ((trainingPlan[day] || []).length === 0) {
         this.$delete(this.trainingPlan, day) // Clean up empty days
       }
     }
