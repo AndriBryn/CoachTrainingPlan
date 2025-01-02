@@ -541,7 +541,7 @@
           >
             <div style="display: flex; justify-content: space-between; align-items: center">
               <div>
-                <strong style="color: #79e098">{{ exercise.name }}</strong>
+                <strong style="color: #79e098">{{ exercise.exercise }}</strong>
               </div>
               <div>
                 <label style="color: #79e098; font-weight: bold; margin-right: 5px">Sets:</label>
@@ -1269,6 +1269,7 @@ export default {
     },
     // Add an exercise to a specific day
     addExerciseToDay(day) {
+      // Check if an exercise has been selected
       if (!this.selectedExerciseForDay[day]) {
         alert('Please select an exercise first.')
         return
@@ -1276,25 +1277,35 @@ export default {
 
       // Ensure the day is initialized
       if (!this.trainingPlan[day]) {
-        this.trainingPlan[day] = [] // Directly initialize the array
+        this.trainingPlan[day] = [] // Initialize as an array
       }
 
-      // Check if the exercise is already added
+      // Find the selected exercise in the exercises list
+      const selectedExercise = this.exercises.find(
+        (exercise) => exercise.exercise === this.selectedExerciseForDay[day]
+      )
+
+      if (!selectedExercise) {
+        alert('Selected exercise not found.')
+        return
+      }
+
+      // Check if the exercise is already added to the day
       if (
-        this.trainingPlan[day].some(
-          (exercise) => exercise.name === this.selectedExerciseForDay[day]
-        )
+        this.trainingPlan[day].some((exercise) => exercise.exercise === selectedExercise.exercise)
       ) {
         alert('This exercise is already added for this day.')
         return
       }
 
+      // Add the entire exercise object to the day's training plan
       this.trainingPlan[day].push({
-        name: this.selectedExerciseForDay[day],
-        sets: 1 // Default number of sets
+        ...selectedExercise, // Include all exercise properties
+        sets: selectedExercise.sets || 1 // Default to 1 set if not defined
       })
 
-      this.selectedExerciseForDay[day] = '' // Reset the selection
+      // Reset the selected exercise for the day
+      this.selectedExerciseForDay[day] = ''
     },
 
     // Remove an exercise from a specific day
