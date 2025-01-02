@@ -483,6 +483,12 @@
             </ul>
           </div>
         </div>
+        <div
+          v-if="measurements.length && editingMode === 'trainingplan'"
+          style="background-color: #2f2f3e; border-radius: 5px"
+        >
+          testing
+        </div>
       </div>
     </div>
 
