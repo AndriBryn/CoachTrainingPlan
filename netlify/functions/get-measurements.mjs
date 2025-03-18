@@ -23,6 +23,11 @@ export const handler = async function (event, context) {
       ref: branch
     })
 
+    // Check if file content exists
+    if (!fileData || !fileData.content) {
+      throw new Error('File content not found')
+    }
+
     const csvContent = Buffer.from(fileData.content, 'base64').toString('utf8')
 
     // Parse the CSV into an array of objects
