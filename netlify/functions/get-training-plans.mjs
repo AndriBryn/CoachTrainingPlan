@@ -1,9 +1,6 @@
-// Netlify function: get-training-plans.js
-
 import { Octokit } from '@octokit/core'
 import dotenv from 'dotenv'
 
-// Load environment variables from .env file if running locally
 if (process.env.NODE_ENV !== 'production') {
   dotenv.config()
 }
@@ -16,7 +13,6 @@ export const handler = async function (event, context) {
   const repo = 'website'
   const branch = 'main'
 
-  // Get the club name from the query string
   const params = event.queryStringParameters || {}
   const clubName = params.clubName
 
@@ -44,6 +40,40 @@ export const handler = async function (event, context) {
     }
 
     const csvContent = Buffer.from(fileData.content, 'base64').toString('utf8')
+    const rows = csvContent.trim().split('\n').slice(1) // Skip header row
+
+    const plans = rows.map((row) => {
+      const [name, ability, rawExercises] = row.split(';')
+
+      const plan = {}
+      const days = rawExercises.split('-')
+
+      days.forEach((dayBlock) => {
+        const [day, ...exerciseParts] = dayBlock.split(',')
+        if (!day || exerciseParts.length === 0) return
+
+        plan[day.trim()] = exerciseParts.map((ex) => {
+          const match = ex.match(/(.+?)\((Sets:.*)\)/)
+          if (match) {
+            return {
+              exercise: match[1].trim(),
+              sets: match[2].replace('Sets:', '').trim()
+            }
+          } else {
+            return {
+              exercise: ex.trim(),
+              sets: ''
+            }
+          }
+        })
+      })
+
+      return {
+        name: name.trim(),
+        ability: ability.trim(),
+        plan
+      }
+    })
 
     return {
       statusCode: 200,
@@ -52,7 +82,7 @@ export const handler = async function (event, context) {
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type'
       },
-      body: JSON.stringify({ csvContent })
+      body: JSON.stringify({ plans })
     }
   } catch (error) {
     if (error.status === 404 || error.message.includes('Not Found')) {
@@ -63,7 +93,7 @@ export const handler = async function (event, context) {
           'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type'
         },
-        body: JSON.stringify({ csvContent: '' })
+        body: JSON.stringify({ plans: [] })
       }
     }
 
