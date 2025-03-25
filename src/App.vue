@@ -1305,6 +1305,19 @@ export default {
         (measurement) => measurement.ability === this.selectedMeasurementAbility
       )
     },
+    selectTrainingPlan(plan) {
+      this.selectedTrainingPlan = plan
+    },
+
+    deleteTrainingPlan(plan) {
+      const confirmDelete = confirm(`Are you sure you want to delete the plan "${plan.name}"?`)
+      if (confirmDelete) {
+        this.trainingPlans = this.trainingPlans.filter((p) => p.name !== plan.name)
+        if (this.selectedTrainingPlan && this.selectedTrainingPlan.name === plan.name) {
+          this.selectedTrainingPlan = null
+        }
+      }
+    },
     createNewTrainingPlan() {
       const newPlanName = prompt('Enter a name for your new training plan:')
       if (!newPlanName) {
