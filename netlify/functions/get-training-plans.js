@@ -55,18 +55,26 @@ export const handler = async function (event, context) {
       body: JSON.stringify({ csvContent })
     }
   } catch (error) {
-    if (error.status === 404) {
+    if (error.status === 404 || error.message.includes('Not Found')) {
       return {
         statusCode: 200,
-        headers: { 'Access-Control-Allow-Origin': '*' },
-        body: JSON.stringify({ csvContent: '' }) // Return empty if no training plan exists
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type'
+        },
+        body: JSON.stringify({ csvContent: '' })
       }
     }
 
     console.error(error)
     return {
       statusCode: 500,
-      headers: { 'Access-Control-Allow-Origin': '*' },
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type'
+      },
       body: JSON.stringify({ error: 'Failed to retrieve training plan', details: error.message })
     }
   }
