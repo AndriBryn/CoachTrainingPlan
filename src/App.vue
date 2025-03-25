@@ -1063,7 +1063,7 @@ export default {
     async fetchTrainingPlans(clubName) {
       try {
         const response = await fetch(
-          `https://playerappperformance.netlify.app/.netlify/functions/get-training-plans?clubName=${encodeURIComponent(clubName)}`
+          `https://coachtrainingplan.netlify.app/.netlify/functions/get-training-plans?clubName=${encodeURIComponent(clubName)}`
         )
         const result = await response.json()
         const csv = result.csvContent
