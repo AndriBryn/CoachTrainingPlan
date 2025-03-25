@@ -538,6 +538,16 @@
           />
         </div>
 
+        <div style="margin-bottom: 20px">
+          <label for="trainingAbility" style="color: #79e098; font-weight: bold">Ability: </label>
+          <select v-model="selectedTrainingPlan.ability" style="width: 200px; text-align: center">
+            <option disabled value="">Select ability</option>
+            <option value="Speed">Speed</option>
+            <option value="Dribbling">Dribbling</option>
+            <option value="Agility">Agility</option>
+          </select>
+        </div>
+
         <!-- Step 2: Assign exercises to each day -->
         <div
           v-for="day in selectedTrainingPlan.days"
@@ -1066,32 +1076,26 @@ export default {
           `https://coachtrainingplan.netlify.app/.netlify/functions/get-training-plans?clubName=${encodeURIComponent(clubName)}`
         )
         const result = await response.json()
-        const csv = result.csvContent
 
-        if (!csv) {
+        if (!result.plans || !Array.isArray(result.plans)) {
           this.trainingPlans = []
+          console.log('No plans found')
           return
         }
 
-        const rows = csv.trim().split('\n')
-        const headers = rows[0].split(',')
-
-        this.trainingPlans = rows.slice(1).map((row) => {
-          const values = row.split(',')
-          const plan = {}
-
-          headers.forEach((header, index) => {
-            plan[header] = values[index]
-          })
-
-          // Convert stringified JSON plan content
-          try {
-            plan.plan = JSON.parse(plan.plan)
-          } catch (e) {
-            plan.plan = {}
+        this.trainingPlans = result.plans.map((plan) => {
+          const normalizedPlan = {}
+          for (const key in plan.plan) {
+            const day = parseInt(key, 10)
+            normalizedPlan[day] = plan.plan[key]
           }
 
-          return plan
+          return {
+            name: plan.name || '',
+            ability: plan.ability || '',
+            plan: normalizedPlan,
+            days: Object.keys(normalizedPlan).length // set number of days for UI
+          }
         })
       } catch (error) {
         console.error('Error fetching training plans:', error)
@@ -1364,7 +1368,6 @@ export default {
         return
       }
 
-      // Check if a plan with the same name already exists
       const existingPlan = this.trainingPlans.find(
         (plan) => plan.name.toLowerCase() === newPlanName.toLowerCase()
       )
@@ -1373,13 +1376,23 @@ export default {
         return
       }
 
-      // Add the new training plan
+      // Prompt for ability
+      const newPlanAbility = prompt(
+        'Enter the ability for this training plan (Speed, Dribbling, Agility):'
+      )
+      if (!['Speed', 'Dribbling', 'Agility'].includes(newPlanAbility)) {
+        alert('Ability must be one of: Speed, Dribbling, or Agility.')
+        return
+      }
+
       this.trainingPlans.push({
         name: newPlanName,
-        days: 7, // Default number of days
-        plan: {} // Empty plan
+        ability: newPlanAbility,
+        days: 7,
+        plan: {}
       })
-      this.selectedTrainingPlan = this.trainingPlans[this.trainingPlans.length - 1] // Select the new plan
+
+      this.selectedTrainingPlan = this.trainingPlans[this.trainingPlans.length - 1]
     },
     // Add an exercise to a specific day
     addExerciseToDay(day) {
