@@ -1018,7 +1018,7 @@ export default {
     togglePasswordVisibility() {
       this.passwordVisible = !this.passwordVisible
     },
-    validatePassword() {
+    async validatePassword() {
       const matchingClub = this.clubsData.find(
         (club) => club.password === this.enteredPassword.trim()
       )
@@ -1026,6 +1026,7 @@ export default {
       if (matchingClub) {
         this.selectedClub = matchingClub.clubName
         this.passwordError = ''
+        await this.fetchTrainingPlans(this.selectedClub)
       } else {
         this.passwordError = 'Incorrect password. Please try again.'
         // Ensure selectedClub is reset to null to prevent the rest of the UI from showing
@@ -1057,6 +1058,44 @@ export default {
         }))
       } catch (error) {
         console.error('Failed to fetch exercises:', error)
+      }
+    },
+    async fetchTrainingPlans(clubName) {
+      try {
+        const response = await fetch(
+          `/.netlify/functions/get-training-plans?clubName=${encodeURIComponent(clubName)}`
+        )
+        const result = await response.json()
+        const csv = result.csvContent
+
+        if (!csv) {
+          this.trainingPlans = []
+          return
+        }
+
+        const rows = csv.trim().split('\n')
+        const headers = rows[0].split(',')
+
+        this.trainingPlans = rows.slice(1).map((row) => {
+          const values = row.split(',')
+          const plan = {}
+
+          headers.forEach((header, index) => {
+            plan[header] = values[index]
+          })
+
+          // Convert stringified JSON plan content
+          try {
+            plan.plan = JSON.parse(plan.plan)
+          } catch (e) {
+            plan.plan = {}
+          }
+
+          return plan
+        })
+      } catch (error) {
+        console.error('Error fetching training plans:', error)
+        this.trainingPlans = []
       }
     },
 
