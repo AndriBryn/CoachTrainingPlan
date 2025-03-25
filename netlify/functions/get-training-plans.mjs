@@ -1,6 +1,6 @@
 // Netlify function: get-training-plans.js
 
-import { Octokit } from '@octokit/rest'
+import { Octokit } from '@octokit/core'
 import dotenv from 'dotenv'
 
 // Load environment variables from .env file if running locally
