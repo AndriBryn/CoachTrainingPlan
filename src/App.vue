@@ -26,14 +26,7 @@
       <!-- Display filtered clubs, measurements, and exercises -->
       <div v-if="filteredClubs.length && measurements.length && exercises.length">
         <!-- Button to submit the updated benchmarks and exercises -->
-        <button
-          @click="
-            updateCSV()
-            saveTrainingPlans()
-          "
-        >
-          Save Changes
-        </button>
+        <button @click="updateCSV">Save Changes</button>
         <div v-for="(club, index) in filteredClubs" :key="index" class="club">
           <h2>{{ club.clubName }}</h2>
 
@@ -1222,6 +1215,7 @@ export default {
 
     async updateCSV() {
       try {
+        saveTrainingPlans()
         const updatedCSV = this.generateCSV()
 
         // Send the updated CSV to Netlify function to update the file
