@@ -1147,14 +1147,17 @@ export default {
       const csvContent = [header, ...rows].join('\n')
 
       try {
-        const response = await fetch('/.netlify/functions/save-training-plans', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            clubName: this.selectedClub,
-            csvContent
-          })
-        })
+        const response = await fetch(
+          'https://coachtrainingplan.netlify.app/.netlify/functions/save-training-plans',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              clubName: this.selectedClub,
+              csvContent
+            })
+          }
+        )
 
         const result = await response.json()
         if (response.ok) {
@@ -1215,17 +1218,20 @@ export default {
 
     async updateCSV() {
       try {
-        saveTrainingPlans()
+        this.saveTrainingPlans()
         const updatedCSV = this.generateCSV()
 
         // Send the updated CSV to Netlify function to update the file
-        const response = await fetch('/.netlify/functions/update', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ csvContent: updatedCSV })
-        })
+        const response = await fetch(
+          'https://coachtrainingplan.netlify.app/.netlify/functions/update',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ csvContent: updatedCSV })
+          }
+        )
 
         const result = await response.json()
         if (response.ok) {

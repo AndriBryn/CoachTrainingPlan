@@ -1,24 +1,35 @@
 import { Octokit } from '@octokit/core'
 import dotenv from 'dotenv'
 
-// Load environment variables from .env file if running locally
 if (process.env.NODE_ENV !== 'production') {
   dotenv.config()
 }
 
 export const handler = async function (event, context) {
-  const GITHUB_TOKEN = process.env.GITHUB_TOKEN // Use environment variables for the token
+  // ✅ Handle preflight request for CORS
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type'
+      },
+      body: 'Preflight OK'
+    }
+  }
+
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN
   const octokit = new Octokit({ auth: GITHUB_TOKEN })
 
-  const owner = 'AndriBryn' // Replace with your GitHub username or organization
-  const repo = 'website' // Replace with your repository name
-  const path = 'public/data/clubs.csv' // Path to the file in the repo
-  const branch = 'main' // Branch to commit to
+  const owner = 'AndriBryn'
+  const repo = 'website'
+  const path = 'public/data/clubs.csv'
+  const branch = 'main'
 
   try {
     const { csvContent } = JSON.parse(event.body)
 
-    // Get the latest commit SHA and the tree SHA it points to
     const { data: commitData } = await octokit.request(
       'GET /repos/{owner}/{repo}/commits/{branch}',
       {
@@ -33,7 +44,6 @@ export const handler = async function (event, context) {
 
     const contentBuffer = Buffer.from(csvContent, 'utf8').toString('base64')
 
-    // Create a new blob for the updated file
     const { data: blobData } = await octokit.request('POST /repos/{owner}/{repo}/git/blobs', {
       owner,
       repo,
@@ -41,7 +51,6 @@ export const handler = async function (event, context) {
       encoding: 'base64'
     })
 
-    // Create a new tree with the updated file
     const { data: treeData } = await octokit.request('POST /repos/{owner}/{repo}/git/trees', {
       owner,
       repo,
@@ -56,7 +65,6 @@ export const handler = async function (event, context) {
       ]
     })
 
-    // Create a new commit
     const { data: commitResponse } = await octokit.request(
       'POST /repos/{owner}/{repo}/git/commits',
       {
@@ -68,23 +76,31 @@ export const handler = async function (event, context) {
       }
     )
 
-    // Directly specify the branch in the URL
     await octokit.request('PATCH /repos/{owner}/{repo}/git/refs/heads/main', {
       owner,
       repo,
       sha: commitResponse.sha,
-      force: true // Force the update if necessary
+      force: true
     })
 
     return {
       statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type'
+      },
       body: JSON.stringify({ message: 'File updated successfully!' })
     }
   } catch (error) {
     console.error(error)
-
     return {
       statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type'
+      },
       body: JSON.stringify({ error: 'Failed to update the file', details: error.message })
     }
   }
