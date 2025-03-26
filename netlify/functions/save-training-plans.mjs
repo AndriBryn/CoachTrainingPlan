@@ -1,10 +1,12 @@
 import { Octokit } from '@octokit/core'
 import dotenv from 'dotenv'
 
-dotenv.config()
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config()
+}
 
-export async function handler(event) {
-  // ✅ Handle CORS preflight
+export const handler = async function (event) {
+  // CORS Preflight
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -13,13 +15,18 @@ export async function handler(event) {
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type'
       },
-      body: 'Preflight response'
+      body: 'Preflight OK'
     }
   }
 
+  console.log('[TrainingPlan] Function triggered')
+
   const { clubName, csvContent } = JSON.parse(event.body || '{}')
+  console.log('[TrainingPlan] Received clubName:', clubName)
+  console.log('[TrainingPlan] Received CSV Content:', csvContent)
 
   if (!clubName || !csvContent) {
+    console.warn('[TrainingPlan] Missing clubName or csvContent')
     return {
       statusCode: 400,
       headers: { 'Access-Control-Allow-Origin': '*' },
@@ -37,32 +44,42 @@ export async function handler(event) {
 
   try {
     let sha = null
+    let fileExists = false
 
-    // Try to get existing file
+    // Step 1: Try to fetch the existing file to get the sha (if exists)
     try {
       const { data: fileData } = await octokit.request(
         'GET /repos/{owner}/{repo}/contents/{path}',
-        {
-          owner,
-          repo,
-          path,
-          ref: branch
-        }
+        { owner, repo, path, ref: branch }
       )
       sha = fileData.sha
+      fileExists = true
+      console.log(`[TrainingPlan] File exists. SHA: ${sha}`)
     } catch (e) {
-      if (e.status !== 404) throw e // Allow 404 (new file), throw other errors
+      if (e.status === 404) {
+        console.log('[TrainingPlan] File does not exist. A new file will be created.')
+      } else {
+        console.error('[TrainingPlan] Failed to fetch file info:', e)
+        throw e
+      }
     }
 
-    await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
+    // Step 2: Encode content and prepare request
+    const encodedContent = Buffer.from(csvContent, 'utf8').toString('base64')
+
+    const putRequest = await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
       owner,
       repo,
       path,
-      message: `Update training plans for ${clubName}`,
-      content: Buffer.from(csvContent).toString('base64'),
+      message: fileExists
+        ? `Update training plans for ${clubName}`
+        : `Create training plans for ${clubName}`,
+      content: encodedContent,
       branch,
-      ...(sha ? { sha } : {}) // Include sha if updating existing file
+      ...(sha ? { sha } : {})
     })
+
+    console.log('[TrainingPlan] File saved successfully:', putRequest.status)
 
     return {
       statusCode: 200,
@@ -74,7 +91,7 @@ export async function handler(event) {
       body: JSON.stringify({ message: 'Training plans saved successfully.' })
     }
   } catch (error) {
-    console.error('Failed to save training plans:', error)
+    console.error('[TrainingPlan] Error saving file:', error)
     return {
       statusCode: 500,
       headers: {
