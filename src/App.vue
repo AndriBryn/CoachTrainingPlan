@@ -26,7 +26,14 @@
       <!-- Display filtered clubs, measurements, and exercises -->
       <div v-if="filteredClubs.length && measurements.length && exercises.length">
         <!-- Button to submit the updated benchmarks and exercises -->
-        <button @click="updateCSV">Save Changes</button>
+        <button
+          @click="
+            updateCSV()
+            saveTrainingPlans()
+          "
+        >
+          Save Changes
+        </button>
         <div v-for="(club, index) in filteredClubs" :key="index" class="club">
           <h2>{{ club.clubName }}</h2>
 
@@ -1125,6 +1132,46 @@ export default {
         club.benchmarks.push(0)
       } else if (!club.benchmarks[measurementIndex]) {
         club.benchmarks[measurementIndex] = 0
+      }
+    },
+    saveTrainingPlans: async function () {
+      if (!this.selectedClub) {
+        alert('No club selected')
+        return
+      }
+
+      const header = 'name;ability;exercises'
+      const rows = this.trainingPlans.map((plan) => {
+        const dayStrings = Object.entries(plan.plan).map(([day, exercises]) => {
+          const exStr = exercises
+            .map((ex) => `${ex.exercise}(${ex.sets ? `Sets:${ex.sets}` : 'Sets:'})`)
+            .join(',')
+          return `${day},${exStr}`
+        })
+        return `${plan.name};${plan.ability};${dayStrings.join('-')}`
+      })
+
+      const csvContent = [header, ...rows].join('\n')
+
+      try {
+        const response = await fetch('/.netlify/functions/save-training-plans', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clubName: this.selectedClub,
+            csvContent
+          })
+        })
+
+        const result = await response.json()
+        if (response.ok) {
+          alert('Training plans saved successfully!')
+        } else {
+          alert(`Failed to save training plans: ${result.error}`)
+        }
+      } catch (error) {
+        console.error('Error saving training plans:', error)
+        alert('An error occurred while saving training plans.')
       }
     },
 
