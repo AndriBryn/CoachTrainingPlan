@@ -511,8 +511,11 @@
               align-items: center;
             "
           >
-            <span style="color: #79e098; font-weight: bold">{{ plan.name }}</span>
-            <div>
+            <span style="color: #79e098; font-weight: bold; width: 20%; text-align: left">{{
+              plan.name
+            }}</span>
+            <span style="color: #79e098; font-weight: bold">{{ plan.ability }}</span>
+            <div style="width: 20%; display: flex; justify-content: end">
               <button @click="selectTrainingPlan(plan)">Edit</button>
               <button @click="deleteTrainingPlan(plan)" style="margin-left: 10px">Delete</button>
             </div>
