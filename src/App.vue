@@ -1137,11 +1137,11 @@ export default {
         return
       }
 
-      const header = 'name;ability;exercises'
+      const header = 'Name;Ability;Exercises'
       const rows = this.trainingPlans.map((plan) => {
         const dayStrings = Object.entries(plan.plan).map(([day, exercises]) => {
           const exStr = exercises
-            .map((ex) => `${ex.exercise}(${ex.sets ? `Sets:${ex.sets}` : 'Sets:'})`)
+            .map((ex) => `${ex.exercise}${ex.sets ? `(Sets: ${ex.sets})` : ''}`)
             .join(',')
           return `${day},${exStr}`
         })

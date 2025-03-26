@@ -57,12 +57,14 @@ export const handler = async function (event, context) {
           if (match) {
             return {
               exercise: match[1].trim(),
-              sets: match[2].replace('Sets:', '').trim()
+              sets: match[2].replace('Sets:', '').trim(),
+              open: false
             }
           } else {
             return {
               exercise: ex.trim(),
-              sets: ''
+              sets: '',
+              open: false
             }
           }
         })
