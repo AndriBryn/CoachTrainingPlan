@@ -564,11 +564,15 @@
             width: 100%;
           "
         >
-          <h3 style="color: #79e098; font-weight: bold">Day {{ day }}</h3>
+          <h3 style="color: #79e098; font-weight: bold; font-size: xx-large; margin-bottom: 10px">
+            Day {{ day }}
+          </h3>
           <div
             style="margin-bottom: 10px; align-items: center; display: flex; justify-content: center"
           >
-            <label style="color: #79e098; font-weight: bold">Select Exercise: </label>
+            <label style="color: #79e098; font-weight: bold; padding-right: 30px"
+              >Select Exercise:
+            </label>
             <select v-model="selectedExerciseForDay[day]" style="width: 300px">
               <option value="" disabled>Select an Exercise</option>
               <option
@@ -582,14 +586,20 @@
             <button @click="addExerciseToDay(day)" style="margin-left: 10px">Add</button>
           </div>
           <!-- Display exercises for the day -->
-          <ul style="list-style: none; padding: 0">
+          <ul style="list-style: none; padding: 0; width: 100%">
             <li
               v-for="(exercise, index) in selectedTrainingPlan.plan[day]"
               :key="index"
-              style="background-color: #222232; padding: 10px; margin: 5px; border-radius: 5px"
+              style="
+                background-color: #222232;
+                padding: 10px;
+                margin: 5px;
+                border-radius: 5px;
+                width: 100%;
+              "
             >
               <div style="display: flex; justify-content: space-between; align-items: center">
-                <div>
+                <div style="width: 20%; text-align: left; font-size: x-large">
                   <strong style="color: #79e098">{{ exercise.exercise }}</strong>
                 </div>
                 <div
@@ -600,14 +610,17 @@
                     justify-content: center;
                   "
                 >
-                  <label style="color: #79e098; font-weight: bold; margin-right: 5px">Sets:</label>
+                  <label style="color: #79e098; font-weight: bold; font-size: large">Sets:</label>
                   <input
                     type="text"
                     v-model="exercise.sets"
                     style="width: 100%; text-align: center"
                   />
                 </div>
-                <button @click="removeExerciseFromDay(day, index)" style="margin-left: 10px">
+                <button
+                  @click="removeExerciseFromDay(day, index)"
+                  style="margin-left: 10px; width: 20%"
+                >
                   Remove
                 </button>
               </div>
