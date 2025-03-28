@@ -526,7 +526,9 @@
 
       <!-- Training Plan Editor -->
       <div v-else style="width: 100%">
-        <h3 style="color: #79e098">Editing Plan: {{ selectedTrainingPlan.name }}</h3>
+        <h3 style="color: #79e098">
+          Editing Plan: {{ selectedTrainingPlan.name }} - {{ selectedTrainingPlan.ability }}
+        </h3>
         <!-- Step 1: Select number of training days -->
         <div style="margin-bottom: 20px">
           <label for="trainingDays" style="color: #79e098; font-weight: bold"
@@ -1089,10 +1091,13 @@ export default {
     },
     async fetchTrainingPlans(clubName) {
       try {
+        const cleanClubName = clubName.replace(/\s+/g, '')
+        console.log('clubname: ', cleanClubName)
         const response = await fetch(
-          `https://coachtrainingplan.netlify.app/.netlify/functions/get-training-plans?clubName=${encodeURIComponent(clubName)}`
+          `https://coachtrainingplan.netlify.app/.netlify/functions/get-training-plans?clubName=${encodeURIComponent(cleanClubName)}`
         )
         const result = await response.json()
+        console.log('Training Plans: ', result)
 
         if (!result.plans || !Array.isArray(result.plans)) {
           this.trainingPlans = []
