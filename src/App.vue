@@ -34,8 +34,7 @@
       <!-- Display filtered clubs, measurements, and exercises -->
       <div v-if="filteredClubs.length && measurements.length && exercises.length">
         <!-- Button to submit the updated benchmarks and exercises -->
-        <button @click="updateCSV">Save Changes to Exercises and Measurement Benchmarks</button>
-        <button @click="saveTrainingPlans">Save Changes to Training Plans</button>
+        <button v-if="showSaveButton" @click="saveAllChanges">Save Changes</button>
         <div v-for="(club, index) in filteredClubs" :key="index" class="club">
           <h2>{{ club.clubName }}</h2>
 
@@ -813,7 +812,8 @@ export default {
       isSuperService: false,
       newClubName: '',
       newClubPassword: '',
-      creationMessage: ''
+      creationMessage: '',
+      showSaveButton: true
     }
   },
   mounted() {
@@ -1227,7 +1227,26 @@ export default {
         alert('An error occurred while saving training plans.')
       }
     },
+    async saveAllChanges() {
+      this.showSaveButton = false // Hide the button immediately
 
+      try {
+        await this.updateCSV() // Wait for the CSV update to complete
+
+        // Wait briefly to ensure GitHub has processed the update
+        await new Promise((resolve) => setTimeout(resolve, 1500)) // 1.5 second delay
+
+        await this.saveTrainingPlans() // Now save the training plans
+
+        alert('Changes saved successfully.') // Notify user
+
+        this.showSaveButton = true // Show the button again
+      } catch (error) {
+        alert('Failed to save changes. Please try again.')
+        console.error(error)
+        this.showSaveButton = true // Re-show the button even on error
+      }
+    },
     generateCSV() {
       const header = 'clubs;measurements;benchmark;exercises;password;keymeasurements'
 
