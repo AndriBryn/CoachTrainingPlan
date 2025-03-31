@@ -37,7 +37,7 @@
               @click="editingMode = 'measurements'"
               :class="{ active: editingMode === 'measurements' }"
             >
-              Set Measurement Benchmarks
+              Set Measurement Benchmarks and Key Measurements
             </button>
             <button
               @click="editingMode = 'exercises'"
@@ -71,6 +71,9 @@
                 </option>
               </select>
             </div>
+            <p style="color: #79e098; font-weight: bold">
+              Key Measurements: {{ currentClub.keymeasurements.length }}/4
+            </p>
           </div>
 
           <!-- Age and Gender Selection -->
@@ -209,7 +212,16 @@
 
                   <!-- Button to edit all age/gender benchmarks -->
                   <div v-if="measurement.selected">
-                    <button @click="openBenchmarkEditor(measurement)">Edit Benchmarks</button>
+                    <button style="margin-right: 10px" @click="openBenchmarkEditor(measurement)">
+                      Edit Benchmarks
+                    </button>
+                    <button @click="toggleKeyMeasurement(club, measurement.name)">
+                      {{
+                        club.keymeasurements.includes(measurement.name)
+                          ? 'Remove Key Measurement'
+                          : 'Make Key Measurement'
+                      }}
+                    </button>
                   </div>
                 </div>
                 <!-- Table for editing benchmarks for all ages and genders -->
@@ -961,11 +973,13 @@ export default {
         let basicClubData = null // Variable to store BasicClub data
 
         this.clubsData = rows.map((row) => {
-          const [clubName, measurements, benchmarks, exercises, password] = row.split(';')
+          const [clubName, measurements, benchmarks, exercises, password, keymeasurements] =
+            row.split(';')
 
           // Convert measurements and benchmarks to arrays
           const measurementsArray = measurements ? measurements.split(',') : []
           const benchmarksArray = benchmarks ? benchmarks.split(',') : []
+          const keyMeasurementArray = keymeasurements ? keymeasurements.split(',') : []
 
           // Initialize an object to store exercises by age and gender
           const exercisesByAgeGender = {}
@@ -1037,11 +1051,28 @@ export default {
             clubName,
             measurements: mappedMeasurements,
             exercisesByAgeGender,
-            password: password.trim()
+            password: password.trim(),
+            keymeasurements: keyMeasurementArray
           }
         })
       } catch (error) {
         console.error('Failed to fetch club data:', error)
+      }
+    },
+    toggleKeyMeasurement(club, measurementName) {
+      const index = club.keymeasurements.indexOf(measurementName)
+
+      if (index !== -1) {
+        // Already a key measurement, remove it
+        club.keymeasurements.splice(index, 1)
+      } else {
+        // Not yet a key measurement
+        if (club.keymeasurements.length >= 4) {
+          alert('You can only select up to 4 key measurements.')
+          return
+        }
+
+        club.keymeasurements.push(measurementName)
       }
     },
     togglePasswordVisibility() {
@@ -1181,7 +1212,7 @@ export default {
     },
 
     generateCSV() {
-      const header = 'clubs;measurements;benchmark;exercises;password'
+      const header = 'clubs;measurements;benchmark;exercises;password;keymeasurements'
 
       const rows = this.clubsData.map((club) => {
         // Get selected measurements
@@ -1219,7 +1250,9 @@ export default {
           })
           .join('/') // Join all age-gender groups with a slash
 
-        return `${club.clubName};${selectedMeasurements};${selectedBenchmarks};${exercisesByAgeGender};${club.password.trim()}`
+        const keyMeasurementsString = (club.keymeasurements || []).join(',')
+
+        return `${club.clubName};${selectedMeasurements};${selectedBenchmarks};${exercisesByAgeGender};${club.password.trim()};${keyMeasurementsString}`
       })
 
       return [header, ...rows].join('\n') // Combine header and rows into CSV format
@@ -1263,9 +1296,16 @@ export default {
     toggleMeasurementSelection(club, measurementName) {
       const measurement = club.measurements.find((m) => m.name === measurementName)
 
-      // Toggle the selected status of the measurement
       if (measurement) {
         measurement.selected = !measurement.selected
+
+        // If measurement is being deselected, also remove it from keymeasurements
+        if (!measurement.selected) {
+          const index = club.keymeasurements.indexOf(measurementName)
+          if (index !== -1) {
+            club.keymeasurements.splice(index, 1)
+          }
+        }
       }
     },
     onAgeOrGenderChange() {
