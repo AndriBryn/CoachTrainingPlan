@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <!-- Password input section -->
-    <div v-if="!selectedClub || passwordError">
+    <div v-if="(!selectedClub || passwordError) && !isSuperService">
       <h3>Enter Club Password</h3>
       <div style="display: flex; flex-direction: column">
         <div>
@@ -20,6 +20,14 @@
         </div>
       </div>
       <p v-if="passwordError" style="color: red">{{ passwordError }}</p>
+    </div>
+    <!-- SuperService Club Creation Form -->
+    <div v-if="isSuperService && !selectedClub" style="margin-top: 20px">
+      <h3>Create a New Club</h3>
+      <input type="text" v-model="newClubName" placeholder="Enter organization name" />
+      <input type="text" v-model="newClubPassword" placeholder="Enter password" />
+      <button @click="createNewClub">Create Organization</button>
+      <p style="color: green" v-if="creationMessage">{{ creationMessage }}</p>
     </div>
     <!-- Display club selection, filters, and content only if no exercise is selected -->
     <div v-if="!selectedExercise && selectedClub">
@@ -801,7 +809,11 @@ export default {
       trainingPlan: {}, // Training plan structure
       selectedExerciseForDay: {}, // Track the selected exercise for each day
       trainingPlans: [],
-      selectedTrainingPlan: null
+      selectedTrainingPlan: null,
+      isSuperService: false,
+      newClubName: '',
+      newClubPassword: '',
+      creationMessage: ''
     }
   },
   mounted() {
@@ -1079,9 +1091,15 @@ export default {
       this.passwordVisible = !this.passwordVisible
     },
     async validatePassword() {
-      const matchingClub = this.clubsData.find(
-        (club) => club.password === this.enteredPassword.trim()
-      )
+      const trimmedPassword = this.enteredPassword.trim()
+      const matchingClub = this.clubsData.find((club) => club.password === trimmedPassword)
+
+      if (trimmedPassword === 'SuperService10!') {
+        this.isSuperService = true
+        this.passwordError = ''
+        this.selectedClub = null
+        return
+      }
 
       if (matchingClub) {
         this.selectedClub = matchingClub.clubName
@@ -1089,7 +1107,6 @@ export default {
         await this.fetchTrainingPlans(this.selectedClub)
       } else {
         this.passwordError = 'Incorrect password. Please try again.'
-        // Ensure selectedClub is reset to null to prevent the rest of the UI from showing
         this.selectedClub = null
       }
     },
@@ -1467,6 +1484,54 @@ export default {
         if (this.selectedTrainingPlan && this.selectedTrainingPlan.name === plan.name) {
           this.selectedTrainingPlan = null
         }
+      }
+    },
+    async createNewClub() {
+      const name = this.newClubName.trim()
+      const password = this.newClubPassword.trim()
+
+      if (!name || !password) {
+        alert('Both organization name and password are required.')
+        return
+      }
+
+      const nameExists = this.clubsData.some((club) => club.clubName === name)
+      const passwordExists = this.clubsData.some((club) => club.password === password)
+
+      if (nameExists || passwordExists) {
+        alert('The club name or password already exists. Please choose another.')
+        return
+      }
+
+      const canvasClub = this.clubsData.find((club) => club.clubName === 'CanvasClub')
+      if (!canvasClub) {
+        alert('CanvasClub does not exist. Cannot clone its data.')
+        return
+      }
+
+      const newClub = {
+        clubName: name,
+        password: password,
+        measurements: JSON.parse(JSON.stringify(canvasClub.measurements)),
+        exercisesByAgeGender: JSON.parse(JSON.stringify(canvasClub.exercisesByAgeGender))
+      }
+
+      this.clubsData.push(newClub)
+
+      // Save changes
+      try {
+        await this.updateCSV()
+        this.creationMessage = `${name} successfully created`
+        setTimeout(() => {
+          this.isSuperService = false
+          this.newClubName = ''
+          this.newClubPassword = ''
+          this.creationMessage = ''
+          this.enteredPassword = ''
+        }, 2000)
+      } catch (error) {
+        alert('Failed to update CSV file.')
+        console.error(error)
       }
     },
     createNewTrainingPlan() {
