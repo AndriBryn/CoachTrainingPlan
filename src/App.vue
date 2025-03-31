@@ -81,6 +81,15 @@
             <p style="color: #79e098; font-weight: bold">
               Key Measurements: {{ currentClub.keymeasurements.length }}/4
             </p>
+            <div style="width: 100%; justify-content: center; display: flex; color: #79e098">
+              <ul style="display: flex; width: 90%; justify-content: space-between">
+                <li v-for="name in currentClub.keymeasurements" :key="name">
+                  <div style="font-size: large; font-weight: bold">
+                    {{ getMeasurementTitle(name) }}
+                  </div>
+                </li>
+              </ul>
+            </div>
           </div>
 
           <!-- Age and Gender Selection -->
@@ -1053,6 +1062,7 @@ export default {
 
             return {
               name: measurement.name,
+              ability: measurement.ability,
               selected: isSelected,
               benchmark: benchmark || {}, // Store benchmarks for each age and gender
               title: measurement.exercise || 'Unknown Title'
@@ -1483,6 +1493,10 @@ export default {
     closeBenchmarkEditor() {
       this.showBenchmarkEditor = false // Hide the editor
       this.selectedMeasurement = null // Clear the selected measurement
+    },
+    getMeasurementTitle(name) {
+      const m = this.currentClub.measurements.find((m) => m.name === name)
+      return m ? m.title : name // fallback to name if title is missing
     },
     filteredClubMeasurements(measurements) {
       if (this.selectedMeasurementAbility === 'all') {
