@@ -1126,7 +1126,13 @@ export default {
           'https://coachtrainingplan.netlify.app/.netlify/functions/get-measurements'
         )
         const result = await response.json()
-        this.measurements = result.measurements // Use measurements from backend
+        this.measurements = result.measurements.map((m) => ({
+          exercise: m.exercise,
+          name: m.name,
+          ability: m.ability,
+          allStddev: m.allStddev,
+          allAges: m.allAges
+        }))
         console.log(this.measurements)
       } catch (error) {
         console.error('Failed to fetch measurements:', error)

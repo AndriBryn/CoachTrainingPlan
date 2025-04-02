@@ -1,19 +1,18 @@
 import { Octokit } from '@octokit/core'
 import dotenv from 'dotenv'
 
-// Load environment variables from .env file if running locally
 if (process.env.NODE_ENV !== 'production') {
   dotenv.config()
 }
 
 export const handler = async function (event, context) {
-  const GITHUB_TOKEN = process.env.GITHUB_TOKEN // Use environment variables for the token
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN
   const octokit = new Octokit({ auth: GITHUB_TOKEN })
 
-  const owner = 'AndriBryn' // Replace with your GitHub username
-  const repo = 'website' // Replace with your repository name
-  const path = 'public/data/exercises.csv' // Path to the file in the repo
-  const branch = 'main' // Branch to commit to
+  const owner = 'AndriBryn'
+  const repo = 'website'
+  const path = 'public/data/exercises.csv'
+  const branch = 'main'
 
   try {
     const { data: fileData } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
@@ -23,26 +22,54 @@ export const handler = async function (event, context) {
       ref: branch
     })
 
-    // Check if file content exists
     if (!fileData || !fileData.content) {
       throw new Error('File content not found')
     }
 
     const csvContent = Buffer.from(fileData.content, 'base64').toString('utf8')
+    const lines = csvContent.trim().split('\n')
 
-    // Parse the CSV into an array of objects
-    const rows = csvContent.split('\n').slice(1) // Remove the header row
-    const measurements = rows.map((row) => {
-      const [exercise, name, withball, ability] = row.split(';') // Assuming the 'ability' is the fourth column
-      return { exercise, name, ability: ability.trim() } // Add ability to the measurement object
+    const headers = lines[0].split(';')
+    const dataRows = lines.slice(1)
+
+    const measurements = dataRows.map((row) => {
+      const values = row.split(';')
+      const base = {
+        exercise: values[0],
+        name: values[1],
+        withball: values[2],
+        ability: values[3],
+        allStddev: {},
+        allAges: {}
+      }
+
+      for (let i = 4; i < headers.length; i++) {
+        const header = headers[i]
+        const value = parseFloat(values[i])
+        if (header.endsWith('mean')) {
+          const key = header.replace('mean', '') // e.g., m9
+          const gender = key[0]
+          const age = key.slice(1)
+          if (!base.allAges[age]) base.allAges[age] = {}
+          base.allAges[age][gender] = value
+        } else if (header.endsWith('std.dev')) {
+          const key = header.replace('std.dev', '') // e.g., m9
+          const gender = key[0]
+          const age = key.slice(1)
+          if (!base.allStddev[age]) base.allStddev[age] = {}
+          base.allStddev[age][gender] = value
+        }
+      }
+
+      return base
     })
 
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': '*', // Allow requests from any origin
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', // Allow specific methods
-        'Access-Control-Allow-Headers': 'Content-Type' // Allow specific headers
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type'
       },
       body: JSON.stringify({ measurements })
     }
@@ -51,9 +78,7 @@ export const handler = async function (event, context) {
 
     return {
       statusCode: 500,
-      headers: {
-        'Access-Control-Allow-Origin': '*' // Include CORS headers in the error response as well
-      },
+      headers: { 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify({ error: 'Failed to retrieve the CSV file', details: error.message })
     }
   }
