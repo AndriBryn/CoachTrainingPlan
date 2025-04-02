@@ -1220,7 +1220,7 @@ export default {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              clubName: this.selectedClub,
+              clubName: this.selectedClub.replace(/\s+/g, ''),
               csvContent
             })
           }
@@ -1531,8 +1531,13 @@ export default {
       const nameExists = this.clubsData.some((club) => club.clubName === name)
       const passwordExists = this.clubsData.some((club) => club.password === password)
 
-      if (nameExists || passwordExists) {
-        alert('The club name or password already exists. Please choose another.')
+      if (nameExists) {
+        alert('The club name already exists. Please choose another.')
+        return
+      }
+
+      if (passwordExists) {
+        alert('The club password already exists. Please choose another.')
         return
       }
 
