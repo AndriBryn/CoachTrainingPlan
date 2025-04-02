@@ -277,6 +277,7 @@
                               v-model.number="selectedMeasurement.benchmark[age][gender]"
                               style="width: 70px; margin-bottom: 5px"
                             />
+                            S
                             <input
                               type="number"
                               :value="calculatePercentage(selectedMeasurement, age, gender)"
@@ -285,6 +286,7 @@
                               max="100"
                               style="width: 60px; margin-top: 2px"
                             />
+                            %
                           </td>
                         </tr>
                       </tbody>
@@ -1162,10 +1164,6 @@ export default {
       const benchmark = measurement?.benchmark?.[ageStr]?.[gender]
       const mean = measurement?.allAges?.[ageStr]?.[gender]
       const stddev = measurement?.allStddev?.[ageStr]?.[gender]
-
-      console.log(
-        `% for ${age}-${gender} | benchmark: ${benchmark}, mean: ${mean}, stddev: ${stddev}`
-      )
 
       if (
         benchmark !== null &&
