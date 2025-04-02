@@ -257,18 +257,33 @@
                     <table>
                       <thead>
                         <tr>
-                          <th>Gender</th>
+                          <th></th>
                           <th v-for="age in ageOptions" :key="age">{{ age }}</th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr v-for="gender in genderOptions" :key="gender">
-                          <td>{{ gender }}</td>
-                          <td v-for="age in ageOptions" :key="age">
+                          <td>
+                            <strong>{{ gender }}</strong>
+                          </td>
+                          <td
+                            v-for="age in ageOptions"
+                            :key="age"
+                            style="padding: 5px; text-align: center"
+                          >
+                            <!-- Editable time input -->
                             <input
                               type="number"
                               v-model.number="selectedMeasurement.benchmark[age][gender]"
-                              :placeholder="'Enter benchmark for ' + age + '-' + gender"
+                              style="width: 70px; margin-bottom: 5px"
+                            />
+                            <input
+                              type="number"
+                              :value="calculatePercentage(selectedMeasurement, age, gender)"
+                              @input="onPercentageChange($event, selectedMeasurement, age, gender)"
+                              min="2"
+                              max="100"
+                              style="width: 60px; margin-top: 2px"
                             />
                           </td>
                         </tr>
@@ -783,6 +798,8 @@
 </template>
 
 <script>
+import { jStat } from 'jstat'
+
 export default {
   data() {
     return {
@@ -1065,7 +1082,9 @@ export default {
               ability: measurement.ability,
               selected: isSelected,
               benchmark: benchmark || {}, // Store benchmarks for each age and gender
-              title: measurement.exercise || 'Unknown Title'
+              title: measurement.exercise || 'Unknown Title',
+              allStddev: measurement.allStddev,
+              allAges: measurement.allAges
             }
           })
 
@@ -1133,9 +1152,59 @@ export default {
           allStddev: m.allStddev,
           allAges: m.allAges
         }))
-        console.log(this.measurements)
       } catch (error) {
         console.error('Failed to fetch measurements:', error)
+      }
+    },
+
+    calculatePercentage(measurement, age, gender) {
+      const ageStr = String(age)
+      const benchmark = measurement?.benchmark?.[ageStr]?.[gender]
+      const mean = measurement?.allAges?.[ageStr]?.[gender]
+      const stddev = measurement?.allStddev?.[ageStr]?.[gender]
+
+      console.log(
+        `% for ${age}-${gender} | benchmark: ${benchmark}, mean: ${mean}, stddev: ${stddev}`
+      )
+
+      if (
+        benchmark !== null &&
+        !isNaN(benchmark) &&
+        benchmark > 0 &&
+        !isNaN(mean) &&
+        !isNaN(stddev) &&
+        stddev > 0
+      ) {
+        const meanLog = Math.log(mean)
+        const cdf = jStat.normal.cdf(Math.log(benchmark), meanLog, stddev)
+        const percentage = 100 - cdf * 100
+        return Math.max(2, Math.min(100, Math.round(percentage)))
+      }
+
+      return 0
+    },
+
+    getBenchmarkFromPercentage(mean, stddev, percentage) {
+      const clampedPercentage = Math.max(2, Math.min(100, percentage))
+      const cdfValue = 1 - clampedPercentage / 100
+      const timeLog = jStat.normal.inv(cdfValue, Math.log(mean), stddev)
+      return Math.exp(timeLog)
+    },
+
+    onPercentageChange(event, measurement, age, gender) {
+      const ageStr = String(age)
+      const value = parseFloat(event.target.value)
+      const mean = measurement?.allAges?.[ageStr]?.[gender]
+      const stddev = measurement?.allStddev?.[ageStr]?.[gender]
+
+      if (!isNaN(value) && mean && stddev) {
+        const newTime = this.getBenchmarkFromPercentage(mean, stddev, value)
+
+        if (!measurement.benchmark[ageStr]) {
+          measurement.benchmark[ageStr] = {}
+        }
+
+        measurement.benchmark[ageStr][gender] = parseFloat(newTime.toFixed(2))
       }
     },
 
