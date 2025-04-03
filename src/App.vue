@@ -1624,12 +1624,26 @@ export default {
         clubName: name,
         password: password,
         measurements: JSON.parse(JSON.stringify(canvasClub.measurements)),
-        exercisesByAgeGender: JSON.parse(JSON.stringify(canvasClub.exercisesByAgeGender))
+        exercisesByAgeGender: JSON.parse(JSON.stringify(canvasClub.exercisesByAgeGender)),
+        keymeasurements: JSON.parse(JSON.stringify(canvasClub.keymeasurements || []))
       }
 
       this.clubsData.push(newClub)
 
-      // Save changes
+      // Clone the training plans from CanvasClub
+      try {
+        const canvasPlans = await this.fetchTrainingPlans('CanvasClub')
+        this.trainingPlans = JSON.parse(JSON.stringify(this.trainingPlans)) // Clone to avoid mutation
+
+        this.selectedClub = name
+
+        await this.saveTrainingPlans() // Save cloned plans under new club
+      } catch (err) {
+        console.error('Failed to copy training plans from CanvasClub:', err)
+        alert('Failed to copy training plans from CanvasClub.')
+      }
+
+      // Save changes to CSV
       try {
         await this.updateCSV()
         this.creationMessage = `${name} successfully created`
