@@ -22,12 +22,31 @@
       <p v-if="passwordError" style="color: red">{{ passwordError }}</p>
     </div>
     <!-- SuperService Club Creation Form -->
-    <div v-if="isSuperService && !selectedClub" style="margin-top: 20px">
+    <div
+      v-if="isSuperService && !selectedClub"
+      style="margin-top: 20px; display: flex; flex-direction: column; align-items: center"
+    >
       <h3>Create a New Club</h3>
-      <input type="text" v-model="newClubName" placeholder="Enter organization name" />
-      <input type="text" v-model="newClubPassword" placeholder="Enter password" />
-      <button @click="createNewClub">Create Organization</button>
-      <p style="color: green" v-if="creationMessage">{{ creationMessage }}</p>
+      <div>
+        <input type="text" v-model="newClubName" placeholder="Enter organization name" />
+        <input type="text" v-model="newClubPassword" placeholder="Enter password" />
+        <button @click="createNewClub">Create Organization</button>
+        <p style="color: green" v-if="creationMessage">{{ creationMessage }}</p>
+      </div>
+      <table class="club-table">
+        <thead>
+          <tr>
+            <th>Club Name</th>
+            <th>Password</th>
+          </tr>
+        </thead>
+        <tbody style="text-align: left">
+          <tr v-for="(club, index) in clubsData" :key="index">
+            <td>{{ club.clubName }}</td>
+            <td>{{ club.password }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
     <!-- Display club selection, filters, and content only if no exercise is selected -->
     <div v-if="!selectedExercise && selectedClub">
@@ -847,6 +866,15 @@ export default {
   mounted() {
     this.fetchAllData()
     this.fetchExercises() // Fetch the exercises
+    // Load the external script dynamically
+    const script = document.createElement('script')
+    script.src = 'https://askell.overcastcdn.com/js/dist/paymentbutton.js?v=3'
+    script.onload = () => {
+      console.log('Payment button script loaded')
+      // The script should automatically find the button now
+      // If not, you may need to trigger their init manually (depends on their SDK)
+    }
+    document.body.appendChild(script)
   },
   computed: {
     previousExerciseName() {
@@ -1633,6 +1661,7 @@ export default {
       // Clone the training plans from CanvasClub
       try {
         const canvasPlans = await this.fetchTrainingPlans('CanvasClub')
+        console.log(canvasPlans)
         this.trainingPlans = JSON.parse(JSON.stringify(this.trainingPlans)) // Clone to avoid mutation
 
         this.selectedClub = name
@@ -2072,5 +2101,17 @@ iframe {
 }
 .icon {
   margin-right: 5px;
+}
+
+.club-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.club-table th,
+.club-table td {
+  border: 1px solid #79e098;
+  padding: 4px;
+  font-size: 1vw;
 }
 </style>
