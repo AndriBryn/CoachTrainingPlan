@@ -1,11 +1,14 @@
 import { Octokit } from '@octokit/core'
+import { Buffer } from 'node:buffer'
+import process from 'node:process'
 import dotenv from 'dotenv'
+import { getGitHubConfig } from './_githubConfig.mjs'
 
 if (process.env.NODE_ENV !== 'production') {
   dotenv.config()
 }
 
-export const handler = async function (event, context) {
+export const handler = async function (event) {
   // ✅ Handle preflight request for CORS
   if (event.httpMethod === 'OPTIONS') {
     return {
@@ -22,10 +25,8 @@ export const handler = async function (event, context) {
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN
   const octokit = new Octokit({ auth: GITHUB_TOKEN })
 
-  const owner = 'AndriBryn'
-  const repo = 'website'
+  const { owner, repo, branch } = getGitHubConfig()
   const path = 'public/data/clubs.csv'
-  const branch = 'main'
 
   try {
     const { csvContent } = JSON.parse(event.body)
@@ -76,9 +77,10 @@ export const handler = async function (event, context) {
       }
     )
 
-    await octokit.request('PATCH /repos/{owner}/{repo}/git/refs/heads/main', {
+    await octokit.request('PATCH /repos/{owner}/{repo}/git/refs/heads/{branch}', {
       owner,
       repo,
+      branch,
       sha: commitResponse.sha,
       force: true
     })

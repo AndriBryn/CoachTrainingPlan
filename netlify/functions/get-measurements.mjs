@@ -1,5 +1,6 @@
 import { Octokit } from '@octokit/core'
 import dotenv from 'dotenv'
+import { getGitHubConfig } from './_githubConfig.mjs'
 
 if (process.env.NODE_ENV !== 'production') {
   dotenv.config()
@@ -9,10 +10,8 @@ export const handler = async function (event, context) {
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN
   const octokit = new Octokit({ auth: GITHUB_TOKEN })
 
-  const owner = 'AndriBryn'
-  const repo = 'website'
+  const { owner, repo, branch } = getGitHubConfig()
   const path = 'public/data/exercises.csv'
-  const branch = 'main'
 
   try {
     const { data: fileData } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {

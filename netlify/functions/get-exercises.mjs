@@ -1,5 +1,6 @@
 import { Octokit } from '@octokit/core'
 import dotenv from 'dotenv'
+import { getGitHubConfig } from './_githubConfig.mjs'
 
 // Load environment variables from .env file if running locally
 if (process.env.NODE_ENV !== 'production') {
@@ -10,10 +11,8 @@ export const handler = async function (event, context) {
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN // Use environment variables for the token
   const octokit = new Octokit({ auth: GITHUB_TOKEN })
 
-  const owner = 'AndriBryn' // Replace with your GitHub username
-  const repo = 'website' // Replace with your repository name
+  const { owner, repo, branch } = getGitHubConfig()
   const path = 'public/data/TrainingPlanCSV.csv' // Path to the file in the repo
-  const branch = 'main' // Branch to commit to
 
   try {
     // Fetch the content of the file from GitHub

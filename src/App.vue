@@ -1031,9 +1031,7 @@ export default {
     },
     async fetchClubData() {
       try {
-        const response = await fetch(
-          'https://coachtrainingplan.netlify.app/.netlify/functions/get-csv-file'
-        )
+        const response = await fetch('/.netlify/functions/get-csv-file')
         const result = await response.json()
         const csvContent = result.csvContent
 
@@ -1171,9 +1169,7 @@ export default {
     },
     async fetchMeasurements() {
       try {
-        const response = await fetch(
-          'https://coachtrainingplan.netlify.app/.netlify/functions/get-measurements'
-        )
+        const response = await fetch('/.netlify/functions/get-measurements')
         const result = await response.json()
         this.measurements = result.measurements.map((m) => ({
           exercise: m.exercise,
@@ -1236,9 +1232,7 @@ export default {
 
     async fetchExercises() {
       try {
-        const response = await fetch(
-          'https://coachtrainingplan.netlify.app/.netlify/functions/get-exercises'
-        )
+        const response = await fetch('/.netlify/functions/get-exercises')
         const result = await response.json()
         this.exercises = result.exercises.map((exercise) => ({
           ...exercise,
@@ -1253,7 +1247,7 @@ export default {
         const cleanClubName = clubName.replace(/\s+/g, '')
         console.log('clubname: ', cleanClubName)
         const response = await fetch(
-          `https://coachtrainingplan.netlify.app/.netlify/functions/get-training-plans?clubName=${encodeURIComponent(cleanClubName)}`
+          `/.netlify/functions/get-training-plans?clubName=${encodeURIComponent(cleanClubName)}`
         )
         const result = await response.json()
         console.log('Training Plans: ', result)
@@ -1316,7 +1310,7 @@ export default {
 
       try {
         const response = await fetch(
-          'https://coachtrainingplan.netlify.app/.netlify/functions/save-training-plans',
+          '/.netlify/functions/save-training-plans',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1411,7 +1405,7 @@ export default {
 
         // Send the updated CSV to Netlify function to update the file
         const response = await fetch(
-          'https://coachtrainingplan.netlify.app/.netlify/functions/update',
+          '/.netlify/functions/update',
           {
             method: 'POST',
             headers: {
